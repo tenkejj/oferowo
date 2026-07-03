@@ -11,8 +11,8 @@
     let _wizardStepAnimTimer = null;
     let _wizardMicroAnimTimer = null;
     let _homeWizardAnimTimer = null;
-    const WIZARD_STEP_ANIM_MS = 400;
-    const WIZARD_STEP_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+    const WIZARD_STEP_ANIM_MS = 520;
+    const WIZARD_STEP_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
     const WIZARD_MICRO_MS = 240;
     const HOME_WIZARD_ANIM_MS = 360;
     let _wizardGotowy = false;
@@ -5102,7 +5102,7 @@
       odswiezWizardPozycjeEntry();
     }
 
-    function odswiezWizardPozycjeEntry() {
+    function odswiezWizardPozycjeEntry(opcje) {
       if (!MOBILE_MQL.matches) return;
       const entry = document.getElementById('wizard-step-2-entry');
       const viewKreator = document.getElementById('view-kreator');
@@ -5113,7 +5113,7 @@
         && !viewKreator.classList.contains('wizard-has-pozycje');
       entry.classList.toggle('is-visible', pokaz);
       document.body.classList.toggle('wizard-hide-step2-entry', !pokaz);
-      if (!pokaz) wyjdzZTrybuInlineWizarda();
+      if (!pokaz && !(opcje && opcje.deferInlineExit)) wyjdzZTrybuInlineWizarda();
     }
 
     function isWizardStep2EntryFlow() {
@@ -5182,6 +5182,51 @@
       });
     }
 
+    function ustawWizardStep2VoiceHint(tekst, typ) {
+      const el = document.getElementById('wizard-step2-voice-hint');
+      if (!el) return;
+      if (!tekst) {
+        el.hidden = true;
+        el.textContent = '';
+        el.className = 'wizard-step2-voice-hint';
+        return;
+      }
+      el.hidden = false;
+      el.textContent = tekst;
+      el.className = 'wizard-step2-voice-hint' + (typ ? ' is-' + typ : '');
+    }
+
+    function odswiezWizardVoiceHero() {
+      if (_wizardStep2Mode !== 'voice') return;
+      const btnParse = document.getElementById('btn-wizard-step2-voice-parse');
+      const loading = !!(btnParse && btnParse.getAttribute('aria-busy') === 'true');
+      const micIndicator = document.getElementById('wizard-step2-mic-indicator');
+      if (micIndicator) {
+        micIndicator.classList.toggle('is-recording', !!speechRecording);
+        micIndicator.classList.toggle('is-idle', !speechRecording && !loading);
+      }
+      if (loading) {
+        ustawWizardStep2Status('Rozpoznaję pozycje…');
+        return;
+      }
+      if (speechRecording) {
+        ustawWizardStep2Status('Słucham…');
+      } else {
+        ustawWizardStep2Status('Tapnij Gotowe, gdy skończysz');
+      }
+    }
+
+    function ustawWizardVoiceRetryWidoczny(prominent) {
+      const btnRetry = document.getElementById('btn-wizard-step2-voice-retry');
+      if (!btnRetry) return;
+      btnRetry.classList.toggle('is-prominent', !!prominent);
+      if (prominent) btnRetry.hidden = false;
+    }
+
+    function komunikatBrakPozycjiWizardGlos() {
+      return 'Nie rozpoznałem pozycji. Powiedz np. „montaż gniazdka 350 zł”.';
+    }
+
     function odswiezWizardStep2Transkrypt() {
       if (_wizardStep2Mode !== 'voice') return;
       const transcript = document.getElementById('wizard-step2-voice-transcript');
@@ -5191,9 +5236,14 @@
       const loading = !!(btnParse && btnParse.getAttribute('aria-busy') === 'true');
       if (transcript) transcript.textContent = aiNotatka ? aiNotatka.value : '';
       if (btnParse) btnParse.disabled = loading;
-      if (btnRetry) btnRetry.hidden = speechRecording || loading;
-      const micIndicator = document.getElementById('wizard-step2-mic-indicator');
-      if (micIndicator) micIndicator.classList.toggle('is-recording', !!speechRecording);
+      if (btnRetry && !btnRetry.classList.contains('is-prominent')) {
+        btnRetry.hidden = speechRecording || loading;
+      }
+      if (tekst && !loading) {
+        const hint = document.getElementById('wizard-step2-voice-hint');
+        if (hint && hint.classList.contains('is-info')) ustawWizardStep2VoiceHint('');
+      }
+      odswiezWizardVoiceHero();
     }
 
     function ustawWizardStep2Status(tekst, typ) {
@@ -5223,9 +5273,11 @@
       }
       const voiceStatus = document.getElementById('wizard-step2-voice-status');
       if (voiceStatus) {
-        voiceStatus.textContent = 'Mów teraz…';
+        voiceStatus.textContent = 'Słucham…';
         voiceStatus.className = 'wizard-step2-inline-status';
       }
+      ustawWizardStep2VoiceHint('');
+      ustawWizardVoiceRetryWidoczny(false);
       const photoStatus = document.getElementById('wizard-step2-photo-status');
       if (photoStatus) {
         photoStatus.textContent = 'Rozpoznaję notatkę…';
@@ -5237,7 +5289,10 @@
         btnParse.setAttribute('aria-busy', 'false');
       }
       const btnRetry = document.getElementById('btn-wizard-step2-voice-retry');
-      if (btnRetry) btnRetry.hidden = true;
+      if (btnRetry) {
+        btnRetry.hidden = true;
+        btnRetry.classList.remove('is-prominent');
+      }
       const photoPanel = document.getElementById('wizard-step2-photo');
       if (photoPanel) photoPanel.classList.remove('is-loading');
     }
@@ -5247,8 +5302,9 @@
       if (aiNotatka) aiNotatka.value = '';
       speechBaseText = '';
       ustawWizardStep2Mode('voice');
+      ustawWizardStep2VoiceHint('');
+      ustawWizardVoiceRetryWidoczny(false);
       odswiezWizardStep2Transkrypt();
-      ustawWizardStep2Status('Mów teraz — powiedz co wyceniasz');
       requestAnimationFrame(() => {
         if (typeof window.rozpocznijDyktowanieAi === 'function') {
           window.rozpocznijDyktowanieAi();
@@ -5264,8 +5320,9 @@
       }
       if (aiNotatka) aiNotatka.value = '';
       speechBaseText = '';
+      ustawWizardStep2VoiceHint('');
+      ustawWizardVoiceRetryWidoczny(false);
       odswiezWizardStep2Transkrypt();
-      ustawWizardStep2Status('Mów teraz — powiedz co wyceniasz');
       if (typeof window.rozpocznijDyktowanieAi === 'function') {
         window.rozpocznijDyktowanieAi();
       }
@@ -5278,13 +5335,13 @@
       }
       const tekst = aiNotatka ? aiNotatka.value.trim() : '';
       if (!tekst) {
-        ustawWizardStep2Status('Nic nie usłyszałem — spróbuj mówić głośniej.', 'error');
+        ustawWizardStep2VoiceHint('Nic nie usłyszałem. Tapnij „Nagraj ponownie” i mów wyraźniej.', 'error');
+        ustawWizardVoiceRetryWidoczny(true);
         odswiezWizardStep2Transkrypt();
-        if (typeof window.rozpocznijDyktowanieAi === 'function') {
-          window.rozpocznijDyktowanieAi();
-        }
         return;
       }
+      ustawWizardStep2VoiceHint('');
+      ustawWizardVoiceRetryWidoczny(false);
       przetworzNotatkeAi();
     }
 
@@ -5389,6 +5446,141 @@
       }, WIZARD_MICRO_MS + 80);
     }
 
+    function znajdzPanelKroku(krok) {
+      if (!MOBILE_MQL.matches) return null;
+      if (krok === 1) {
+        return document.getElementById('wizard-klient-methods');
+      }
+      if (krok === 2) {
+        const viewKreator = document.getElementById('view-kreator');
+        const entryFlow = viewKreator
+          && !viewKreator.classList.contains('wizard-manual-mode')
+          && !viewKreator.classList.contains('wizard-has-pozycje');
+        if (entryFlow) return document.getElementById('wizard-step-2-entry');
+      }
+      return document.querySelector('#oferta-form .accordion-section.wizard-step-active .accordion-body');
+    }
+
+    function isPrzejscieKrok12(prevKrok, nextKrok) {
+      return (prevKrok === 1 && nextKrok === 2) || (prevKrok === 2 && nextKrok === 1);
+    }
+
+    function animujPanelWizarda(panel, keyframes, duration) {
+      if (!panel || typeof panel.animate !== 'function') return Promise.resolve();
+      panel.getAnimations().forEach((a) => {
+        try { a.cancel(); } catch (e) {}
+      });
+      panel.style.willChange = 'transform, opacity';
+      const anim = panel.animate(keyframes, {
+        duration,
+        easing: WIZARD_STEP_EASE,
+        fill: 'both',
+      });
+      return anim.finished.catch(() => {}).finally(() => {
+        panel.style.willChange = '';
+        panel.style.transform = '';
+        panel.style.opacity = '';
+      });
+    }
+
+    function ustawPanelWyjscia(panel, aktywny) {
+      if (!panel) return;
+      panel.classList.toggle('wizard-panel-exiting', !!aktywny);
+    }
+
+    function odpalAnimacjePrzejsciaKroku12(prevKrok, nextKrok, opts) {
+      const chromeFromH = opts && opts.chromeFromH ? opts.chromeFromH : 0;
+      const outgoingPanel = opts && opts.outgoingPanel;
+      const incomingPanel = opts && opts.incomingPanel;
+      const onDone = opts && opts.onDone;
+      const kierunek = nextKrok > prevKrok ? 1 : -1;
+      const cls = kierunek > 0 ? 'wizard-step-anim-forward' : 'wizard-step-anim-back';
+      const dur = WIZARD_STEP_ANIM_MS;
+      const yOut = kierunek > 0 ? -5 : 5;
+      const yIn = kierunek > 0 ? 6 : -5;
+
+      document.body.classList.remove(
+        'wizard-step-anim-forward',
+        'wizard-step-anim-back',
+        'wizard-step-anim-js',
+        'wizard-step12-transition'
+      );
+      clearTimeout(_wizardStepAnimTimer);
+
+      let finished = false;
+      const zakoncz = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(_wizardStepAnimTimer);
+        ustawPanelWyjscia(outgoingPanel, false);
+        if (incomingPanel) {
+          incomingPanel.style.opacity = '';
+          incomingPanel.style.transform = '';
+        }
+        document.body.classList.remove(
+          'wizard-step12-transition',
+          'wizard-step-anim-forward',
+          'wizard-step-anim-back',
+          'wizard-step-anim-js'
+        );
+        if (typeof onDone === 'function') onDone();
+      };
+
+      document.body.classList.add('wizard-step12-transition', cls, 'wizard-step-anim-js');
+      if (outgoingPanel) ustawPanelWyjscia(outgoingPanel, true);
+      if (incomingPanel) {
+        incomingPanel.style.opacity = '0';
+        incomingPanel.style.transform = 'translate3d(0, ' + yIn + 'px, 0)';
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const chrome = document.getElementById('wizard-mobile-chrome');
+          let chromeAnim = Promise.resolve();
+          if (chrome && chromeFromH > 0) {
+            const toH = chrome.getBoundingClientRect().height;
+            if (Math.abs(toH - chromeFromH) > 2) {
+              chrome.style.height = chromeFromH + 'px';
+              chrome.style.overflow = 'hidden';
+              chromeAnim = new Promise((resolve) => {
+                requestAnimationFrame(() => {
+                  chrome.style.transition = 'height ' + dur + 'ms ' + WIZARD_STEP_EASE;
+                  chrome.style.height = toH + 'px';
+                  const cleanup = () => {
+                    chrome.style.height = '';
+                    chrome.style.overflow = '';
+                    chrome.style.transition = '';
+                    resolve();
+                  };
+                  chrome.addEventListener('transitionend', (e) => {
+                    if (e.propertyName === 'height') cleanup();
+                  }, { once: true });
+                  setTimeout(cleanup, dur + 80);
+                });
+              });
+            }
+          }
+
+          const outAnim = outgoingPanel
+            ? animujPanelWizarda(outgoingPanel, [
+              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+              { opacity: 0, transform: 'translate3d(0, ' + yOut + 'px, 0)' },
+            ], dur)
+            : Promise.resolve();
+
+          const inAnim = incomingPanel
+            ? animujPanelWizarda(incomingPanel, [
+              { opacity: 0, transform: 'translate3d(0, ' + yIn + 'px, 0)' },
+              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+            ], dur)
+            : Promise.resolve();
+
+          Promise.all([outAnim, inAnim, chromeAnim]).finally(zakoncz);
+          _wizardStepAnimTimer = setTimeout(zakoncz, dur + 100);
+        });
+      });
+    }
+
     function znajdzPanelAnimacjiKroku() {
       if (!MOBILE_MQL.matches) return null;
       if (_wizardKrok === 2 && isWizardStep2EntryFlow()) {
@@ -5478,21 +5670,37 @@
       const kroiData = WIZARD_KROKI.find(k => k.nr === nextKrok);
       if (!kroiData) return;
 
+      const animujPrzejscie = prevKrok !== nextKrok && animacjeWlaczone();
+      const przejscie12 = animujPrzejscie && isPrzejscieKrok12(prevKrok, nextKrok);
+
+      let chromeFromH = 0;
+      let outgoingPanel = null;
+      if (przejscie12) {
+        const chrome = document.getElementById('wizard-mobile-chrome');
+        if (chrome) chromeFromH = Math.ceil(chrome.getBoundingClientRect().height);
+        outgoingPanel = znajdzPanelKroku(prevKrok);
+      }
+
       _wizardKrok = nextKrok;
 
       document.body.dataset.wizardKrok = String(_wizardKrok);
 
       const stepTitle = document.getElementById('wizard-step-title');
-      if (stepTitle) stepTitle.textContent = kroiData.title;
-
       const stepLabel = document.getElementById('wizard-step-label');
-      if (stepLabel) stepLabel.textContent = 'Krok ' + _wizardKrok + ' z ' + WIZARD_KROK_MAX;
-
-      document.querySelectorAll('.wizard-dot[data-dot]').forEach(dot => {
-        const nr = parseInt(dot.dataset.dot, 10);
-        dot.classList.toggle('is-active', nr === _wizardKrok);
-        dot.classList.toggle('is-done', nr < _wizardKrok);
-      });
+      const ustawNaglowekKroku = () => {
+        if (stepTitle) stepTitle.textContent = kroiData.title;
+        if (stepLabel) stepLabel.textContent = 'Krok ' + _wizardKrok + ' z ' + WIZARD_KROK_MAX;
+        document.querySelectorAll('.wizard-dot[data-dot]').forEach(dot => {
+          const nr = parseInt(dot.dataset.dot, 10);
+          dot.classList.toggle('is-active', nr === _wizardKrok);
+          dot.classList.toggle('is-done', nr < _wizardKrok);
+        });
+      };
+      if (przejscie12) {
+        setTimeout(ustawNaglowekKroku, Math.round(WIZARD_STEP_ANIM_MS * 0.28));
+      } else {
+        ustawNaglowekKroku();
+      }
 
       document.querySelectorAll('#oferta-form .accordion-section[data-accordion-id]').forEach(s => {
         const visible = kroiData.sekcje.includes(s.dataset.accordionId);
@@ -5536,20 +5744,21 @@
       }
 
       const ofertaForm = document.getElementById('oferta-form');
-      const animujPrzejscie = prevKrok !== nextKrok && animacjeWlaczone();
+      const odroczZamkniecieKlienta = przejscie12 && prevKrok === 1 && nextKrok === 2;
+      const odroczWyjscieInline = przejscie12 && prevKrok === 2 && nextKrok === 1;
 
       if (_wizardKrok !== 2) {
         const vk = document.getElementById('view-kreator');
         if (vk) vk.classList.remove('wizard-manual-mode');
-        wyjdzZTrybuInlineWizarda();
+        if (!odroczWyjscieInline) wyjdzZTrybuInlineWizarda();
         document.documentElement.style.removeProperty('--wizard-chrome-h-step2');
       }
-      if (nextKrok !== 1 || prevKrok !== nextKrok) {
+      if ((nextKrok !== 1 || prevKrok !== nextKrok) && !odroczZamkniecieKlienta) {
         zamknijPoleKlientaWizarda();
       }
       odswiezWizardPozycjeUI();
       odswiezWidoczneSekcjeWizarda();
-      odswiezWizardPozycjeEntry();
+      odswiezWizardPozycjeEntry(odroczWyjscieInline ? { deferInlineExit: true } : undefined);
       if (_wizardKrok === 3) odswiezWizardKrok3UI();
       if (_wizardKrok === 2) {
         syncWizardStep2ChromeHeight();
@@ -5561,11 +5770,28 @@
         if (ofertaForm) ofertaForm.scrollTop = 0;
         window.scrollTo(0, 0);
       };
+      const poAnimacji = () => {
+        if (odroczZamkniecieKlienta) zamknijPoleKlientaWizarda();
+        if (odroczWyjscieInline) {
+          wyjdzZTrybuInlineWizarda();
+          odswiezWizardPozycjeEntry();
+        }
+        ustawScroll();
+      };
       if (!animujPrzejscie) {
         ustawScroll();
       }
 
-      odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok, animujPrzejscie ? ustawScroll : null);
+      if (przejscie12) {
+        odpalAnimacjePrzejsciaKroku12(prevKrok, nextKrok, {
+          chromeFromH,
+          outgoingPanel,
+          incomingPanel: znajdzPanelKroku(nextKrok),
+          onDone: animujPrzejscie ? poAnimacji : null,
+        });
+      } else {
+        odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok, animujPrzejscie ? ustawScroll : null);
+      }
       saveDraft();
     }
 
@@ -6015,8 +6241,23 @@
     let aiPhotoPayload = null;
 
     function ustawAiParseStatus(tekst, typ) {
-      if (_wizardStep2Mode && MOBILE_MQL.matches && wizardMobileAktywny() && _wizardKrok === 2) {
-        ustawWizardStep2Status(tekst, typ);
+      if (_wizardStep2Mode === 'voice' && MOBILE_MQL.matches && wizardMobileAktywny() && _wizardKrok === 2) {
+        if (typ === 'error') {
+          const komunikat = (tekst && tekst.indexOf('nie ma pozycji') !== -1)
+            ? komunikatBrakPozycjiWizardGlos()
+            : tekst;
+          ustawWizardStep2VoiceHint(komunikat, 'error');
+          ustawWizardVoiceRetryWidoczny(true);
+          odswiezWizardVoiceHero();
+        } else if (typ === 'success') {
+          ustawWizardStep2VoiceHint(tekst, 'success');
+          odswiezWizardVoiceHero();
+        } else if (tekst) {
+          ustawWizardStep2Status(tekst, typ);
+        } else {
+          odswiezWizardVoiceHero();
+        }
+        odswiezWizardStep2Transkrypt();
         return;
       }
       if (!aiParseStatus) return;
@@ -6033,9 +6274,7 @@
         btnVoiceParse.disabled = !!loading;
         btnVoiceParse.setAttribute('aria-busy', loading ? 'true' : 'false');
         if (voiceCtaLabel) voiceCtaLabel.textContent = 'Gotowe';
-        if (loading) {
-          ustawWizardStep2Status('Rozpoznaję pozycje…');
-        }
+        if (loading) ustawWizardStep2VoiceHint('');
         odswiezWizardStep2Transkrypt();
       }
       if (_wizardStep2Mode === 'photo' && photoPanel) {
@@ -6622,11 +6861,11 @@
           btnAiMic.classList.add('is-recording');
           speechRecognition.start();
           if (_wizardStep2Mode === 'voice' && MOBILE_MQL.matches && wizardMobileAktywny() && _wizardKrok === 2) {
-            ustawWizardStep2Status('Mów teraz — tapnij Gotowe, gdy skończysz');
+            odswiezWizardVoiceHero();
+            odswiezWizardStep2Transkrypt();
           } else {
             ustawAiParseStatus('Mów teraz — dotknij mikrofonu, aby zakończyć.', 'info');
           }
-          odswiezWizardStep2Transkrypt();
           return true;
         } catch (e) {
           zatrzymajDyktowanie();

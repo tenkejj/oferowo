@@ -9,10 +9,14 @@
     let _wizardKrok = 1;
     let _wizardStep2Mode = '';
     let _wizardStepAnimTimer = null;
+    let _wizardMicroAnimTimer = null;
     let _homeWizardAnimTimer = null;
-    const WIZARD_STEP_ANIM_MS = 220;
+    const WIZARD_STEP_ANIM_MS = 400;
+    const WIZARD_STEP_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+    const WIZARD_MICRO_MS = 240;
     const HOME_WIZARD_ANIM_MS = 360;
     let _wizardGotowy = false;
+    let _pominZapisSzkicu = false;
 
     const shareSupported = typeof navigator !== 'undefined'
       && typeof navigator.canShare === 'function'
@@ -1777,6 +1781,7 @@
 
     function zamknijGenOverlay() {
       const overlay = document.getElementById('gen-overlay');
+      const bylUkoniczony = !!(overlay && overlay.classList.contains('is-complete'));
       if (overlay) {
         overlay.setAttribute('hidden', '');
         overlay.classList.add('hidden');
@@ -1792,6 +1797,10 @@
       _genAktualnaNazwa = '';
       _genAktualnyPayload = null;
       _genAktualneKoszty = null;
+      if (bylUkoniczony && MOBILE_MQL.matches) {
+        wyczyscFormularz();
+        pokazViewHome({ skipAnim: true });
+      }
     }
 
     // Wire overlay buttons (once, on DOMContentLoaded)
@@ -1908,6 +1917,7 @@
         const nazwaPliku = `wycena-${payload.klient.replace(/[^a-z0-9-_]+/gi, '_') || 'dokument'}.pdf`;
 
         trackEvent('pdf_generated');
+        zakonczSzkicPoWygenerowaniu();
 
         if (desktopTryb) {
           zaladujPdfDoBufora(blob);
@@ -2769,7 +2779,14 @@
       }));
     }
 
+    function zakonczSzkicPoWygenerowaniu() {
+      try { localStorage.removeItem(STORAGE_KEY_DRAFT); } catch (e) {}
+      if (MOBILE_MQL.matches) _pominZapisSzkicu = true;
+      odswiezSzkicUI();
+    }
+
     function saveDraft() {
+      if (_pominZapisSzkicu) return;
       const dane = { pozycje: zbierzPozycjeDoDraft() };
       POLA_DRAFT.forEach(id => {
         const el = document.getElementById(id);
@@ -2898,10 +2915,9 @@
     function odswiezPwaHint() {
       const sec = document.getElementById('settings-pwa-section');
       if (!sec) return;
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
         || window.navigator.standalone === true;
-      const pokaz = MOBILE_MQL.matches && isIOS && !isStandalone;
+      const pokaz = MOBILE_MQL.matches && !isStandalone;
       sec.hidden = !pokaz;
     }
 
@@ -2965,6 +2981,7 @@
     }
 
     function wyczyscFormularz() {
+      _pominZapisSzkicu = false;
       try { localStorage.removeItem(STORAGE_KEY_DRAFT); } catch (e) {}
 
       POLA_DRAFT.forEach(id => {
@@ -4980,6 +4997,7 @@
       if (field) field.removeAttribute('hidden');
       const bodyKlient = document.getElementById('accordion-body-klient');
       if (bodyKlient) bodyKlient.scrollTop = 0;
+      odpalWizardPanelMicroAnim(field);
       requestAnimationFrame(() => syncWizardCtaBarHeight());
     }
 
@@ -5109,6 +5127,11 @@
       requestAnimationFrame(() => {
         syncWizardStep2ChromeHeight();
         syncWizardCtaBarHeight();
+        const panel =
+          _wizardStep2Mode === 'voice' ? voicePanel
+            : _wizardStep2Mode === 'photo' ? photoPanel
+              : methodsPanel;
+        odpalWizardPanelMicroAnim(panel);
       });
     }
 
@@ -5274,18 +5297,81 @@
       });
     }
 
+    function odpalWizardPanelMicroAnim(el) {
+      if (!MOBILE_MQL.matches || !animacjeWlaczone() || !el) return;
+      el.classList.remove('wizard-micro-anim');
+      void el.offsetWidth;
+      el.classList.add('wizard-micro-anim');
+      clearTimeout(_wizardMicroAnimTimer);
+      _wizardMicroAnimTimer = setTimeout(() => {
+        el.classList.remove('wizard-micro-anim');
+      }, WIZARD_MICRO_MS + 80);
+    }
+
+    function znajdzPanelAnimacjiKroku() {
+      if (!MOBILE_MQL.matches) return null;
+      if (_wizardKrok === 2 && isWizardStep2EntryFlow()) {
+        return document.getElementById('wizard-step-2-entry');
+      }
+      return document.querySelector('#oferta-form .accordion-section.wizard-step-active .accordion-body');
+    }
+
     function odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok) {
       if (!MOBILE_MQL.matches || prevKrok === nextKrok || prevKrok === 0) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (!animacjeWlaczone()) return;
 
-      document.body.classList.remove('wizard-step-anim-forward', 'wizard-step-anim-back');
-      const cls = nextKrok > prevKrok ? 'wizard-step-anim-forward' : 'wizard-step-anim-back';
-      requestAnimationFrame(() => {
+      const kierunek = nextKrok > prevKrok ? 1 : -1;
+      const cls = kierunek > 0 ? 'wizard-step-anim-forward' : 'wizard-step-anim-back';
+      const panel = znajdzPanelAnimacjiKroku();
+      const ease = WIZARD_STEP_EASE;
+
+      document.body.classList.remove(
+        'wizard-step-anim-forward',
+        'wizard-step-anim-back',
+        'wizard-step-anim-js'
+      );
+      clearTimeout(_wizardStepAnimTimer);
+
+      const uruchom = () => {
         document.body.classList.add(cls);
-        clearTimeout(_wizardStepAnimTimer);
+
+        if (panel && typeof panel.animate === 'function') {
+          document.body.classList.add('wizard-step-anim-js');
+          panel.getAnimations().forEach((a) => {
+            try { a.cancel(); } catch (e) {}
+          });
+          panel.style.willChange = 'transform, filter';
+          const anim = panel.animate(
+            [
+              {
+                transform: `translate3d(${kierunek * 14}px, 0, 0)`,
+                filter: 'opacity(0.82)',
+              },
+              {
+                transform: 'translate3d(0, 0, 0)',
+                filter: 'opacity(1)',
+              },
+            ],
+            { duration: WIZARD_STEP_ANIM_MS, easing: ease, fill: 'both' }
+          );
+          anim.finished.catch(() => {}).finally(() => {
+            panel.style.willChange = '';
+            panel.style.transform = '';
+            panel.style.filter = '';
+          });
+        }
+
         _wizardStepAnimTimer = setTimeout(() => {
-          document.body.classList.remove('wizard-step-anim-forward', 'wizard-step-anim-back');
+          document.body.classList.remove(
+            'wizard-step-anim-forward',
+            'wizard-step-anim-back',
+            'wizard-step-anim-js'
+          );
         }, WIZARD_STEP_ANIM_MS);
+      };
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(uruchom);
       });
     }
 

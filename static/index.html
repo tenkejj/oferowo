@@ -20,11 +20,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="/static/css/style-mobile.css" media="(max-width: 1023px)">
-  <link rel="manifest" href="/static/manifest.json">
+  <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#0a0a0a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SumIt">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16.png">
-  <link rel="apple-touch-icon" href="/static/icons/pwa-512.png">
+  <link rel="apple-touch-icon" href="/static/icons/pwa-192.png">
 </head>
 <body data-active-view="view-home">
   <div class="page">
@@ -789,7 +793,8 @@
         </section>
         <section class="settings-section settings-section-pwa" id="settings-pwa-section" hidden>
           <h4 class="settings-section-title">Aplikacja na telefonie</h4>
-          <p class="settings-hint">Na iPhone otwórz SumIt w <strong>Safari</strong>, dotknij <strong>Udostępnij</strong> (kwadrat ze strzałką) i wybierz <strong>Do ekranu początkowego</strong>.</p>
+          <p class="settings-hint settings-pwa-hint"><strong>iPhone:</strong> Otwórz <strong>sum-it.app</strong> w przeglądarce <strong>Safari</strong> (nie w Chrome), dotknij <strong>Udostępnij</strong> (kwadrat ze strzałką) i wybierz <strong>Do ekranu początkowego</strong>.</p>
+          <p class="settings-hint settings-pwa-hint settings-hint-gap"><strong>Android:</strong> Otwórz SumIt w <strong>Chrome</strong>, dotknij <strong>menu</strong> (⋮) i wybierz <strong>Zainstaluj aplikację</strong> lub <strong>Dodaj do ekranu głównego</strong>. Jeśli nie widzisz opcji — odśwież stronę i spróbuj ponownie.</p>
         </section>
         <section class="settings-section settings-section-contact">
           <h4 class="settings-section-title">Kontakt</h4>
@@ -801,12 +806,6 @@
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
               </svg>
               <span>franciszekdranka@gmail.com</span>
-            </a>
-            <a class="settings-contact-link" href="https://www.facebook.com/profile.php?id=61557898078057" target="_blank" rel="noopener noreferrer">
-              <svg class="settings-contact-icon settings-contact-icon--fb" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              <span>Franek Dranka</span>
             </a>
           </div>
           <p class="settings-creator-credit" aria-hidden="true">Franciszek Dranka</p>
@@ -1087,7 +1086,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/js/sw.js').catch(() => {});
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
       });
     }
   </script>

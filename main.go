@@ -11,8 +11,13 @@ import (
 // nie próbowały zgadywać kodowania na podstawie heurystyk Windows-1252.
 func utf8Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || strings.HasSuffix(r.URL.Path, ".html") {
+		switch {
+		case r.URL.Path == "/" || strings.HasSuffix(r.URL.Path, ".html"):
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		case r.URL.Path == "/manifest.webmanifest" || strings.HasSuffix(r.URL.Path, "manifest.json"):
+			w.Header().Set("Content-Type", "application/manifest+json; charset=utf-8")
+		case r.URL.Path == "/sw.js" || strings.HasSuffix(r.URL.Path, ".js"):
+			w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -29,6 +34,14 @@ func main() {
 		http.ServeFile(w, r, "static/index.html")
 	})
 	mux.Handle("GET /", utf8Middleware(indexHandler))
+
+	mux.Handle("GET /sw.js", utf8Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/js/sw.js")
+	})))
+
+	mux.Handle("GET /manifest.webmanifest", utf8Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/manifest.json")
+	})))
 
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("static")))
 	mux.Handle("GET /static/", utf8Middleware(staticHandler))

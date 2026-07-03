@@ -26,6 +26,10 @@
   --home-cta-pad-x: 12px;
   --home-cta-inner-gap: 12px;
   --home-wizard-anim-ms: 360ms;
+  --wizard-step-anim-ms: 400ms;
+  --wizard-step-anim-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --wizard-micro-ms: 240ms;
+  --wizard-micro-ease: cubic-bezier(0.32, 0.72, 0, 1);
   --gen-logo-w: 200px;
   --gen-logo-max-h: 84px;
   --gen-progress-ms: 12000;
@@ -1201,7 +1205,7 @@ body[data-active-view="view-kreator"] .mobile-chrome {
   cursor: pointer;
   box-shadow: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+  transition: background var(--wizard-micro-ms) var(--wizard-micro-ease), border-color var(--wizard-micro-ms) var(--wizard-micro-ease), transform var(--wizard-micro-ms) var(--wizard-micro-ease);
 }
 
 .wizard-step3-duration-btn:active {
@@ -4365,6 +4369,17 @@ body[data-active-view="view-firma"] #view-firma {
   color: #ffffff !important;
   border: none !important;
   box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--wizard-micro-ms) var(--wizard-micro-ease),
+    background-color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    background var(--wizard-micro-ms) var(--wizard-micro-ease),
+    opacity var(--wizard-micro-ms) var(--wizard-micro-ease);
+}
+
+body[data-active-view="view-kreator"] #btn-generuj:active,
+body[data-active-view="view-kreator"] #btn-wizard-dalej:active {
+  transform: scale(0.976);
 }
 
 body[data-active-view="view-firma"] #btn-cfg-zapisz {
@@ -5064,13 +5079,14 @@ select {
   height: 8px;
   border-radius: 50%;
   background: var(--m-muted-dim);
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.28s var(--wizard-step-anim-ease, ease), transform 0.28s var(--wizard-step-anim-ease, ease), box-shadow 0.28s var(--wizard-step-anim-ease, ease);
   flex-shrink: 0;
 }
 
 .wizard-dot.is-active {
   background: var(--m-accent);
   box-shadow: 0 0 0 2px rgba(192, 20, 60, 0.22);
+  transform: scale(1.12);
 }
 
 .wizard-dot.is-done {
@@ -5178,15 +5194,22 @@ body[data-active-view="view-historia"] #oferta-form .submit-wrap {
   border-radius: 12px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.1s ease, opacity 0.1s;
+  transition:
+    transform var(--wizard-micro-ms) var(--wizard-micro-ease),
+    background-color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    background var(--wizard-micro-ms) var(--wizard-micro-ease),
+    border-color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    box-shadow var(--wizard-micro-ms) var(--wizard-micro-ease),
+    opacity var(--wizard-micro-ms) var(--wizard-micro-ease);
   text-align: left;
   padding: 14px 16px;
   border: 1px solid var(--m-border);
 }
 
 .wizard-input-btn:active {
-  transform: scale(0.985);
-  opacity: 0.9;
+  transform: scale(0.972);
+  opacity: 0.94;
 }
 
 .wizard-input-primary {
@@ -6611,6 +6634,13 @@ body.gen-overlay-open .mobile-chrome {
   pointer-events: none !important;
 }
 
+body.gen-overlay-open #wizard-mobile-chrome,
+body.gen-overlay-open .home-header,
+body.gen-overlay-open .mobile-chrome > .header.header-sticky {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 body.gen-overlay-open #view-home,
 body.gen-overlay-open #view-kreator {
   visibility: hidden !important;
@@ -6639,14 +6669,20 @@ body.gen-overlay-open #view-kreator {
 }
 
 .gen-logo-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: var(--gen-logo-max-h);
   flex-shrink: 0;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--m-border);
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.gen-logo-wrap.sumit-logo-kurenai {
+  display: inline-block;
+  position: relative;
+  line-height: 0;
+  width: auto;
+  max-width: 100%;
 }
 
 .gen-logo-wrap.sumit-logo-kurenai > .gen-logo-img {
@@ -7028,7 +7064,7 @@ body[data-active-view="view-kreator"][data-wizard-krok="3"]
   margin: 0 !important;
   padding: 0 !important;
   overflow: visible !important;
-  opacity: 1 !important;
+  opacity: 1;
   position: static !important;
   width: 100% !important;
   clip: auto !important;
@@ -7062,7 +7098,7 @@ body[data-active-view="view-kreator"][data-wizard-krok="3"]
   padding: 20px !important;
   background: var(--m-bg) !important;
   visibility: visible !important;
-  opacity: 1 !important;
+  opacity: 1;
   max-height: none !important;
   height: auto !important;
   min-height: 0 !important;
@@ -7756,15 +7792,182 @@ body.wizard-klient-field-open[data-active-view="view-kreator"][data-wizard-krok=
   overflow: visible;
 }
 
-/* ── Wizard: przejścia (prosty fade) ─────────────────────────────────────── */
+/* ── Wizard: przejścia między krokami ─────────────────────────────────────── */
 
-@keyframes wizard-chrome-fade-in {
+@keyframes wizard-content-in {
   from {
-    opacity: 0.55;
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
   }
   to {
     opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
+}
+
+@keyframes wizard-stagger-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+body[data-active-view="view-kreator"] .wizard-micro-anim {
+  animation: wizard-content-in var(--wizard-micro-ms) var(--wizard-step-anim-ease) both;
+  will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-klient-methods > .wizard-input-btn,
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > .wizard-input-btn,
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > label.wizard-input-btn {
+  animation: wizard-stagger-in 0.46s var(--wizard-micro-ease) both;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-klient-methods > .wizard-input-btn:nth-of-type(1),
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > .wizard-input-btn:nth-of-type(1),
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > label.wizard-input-btn:nth-of-type(1) {
+  animation-delay: 0.05s;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-klient-methods > .wizard-input-btn:nth-of-type(2),
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > .wizard-input-btn:nth-of-type(2) {
+  animation-delay: 0.11s;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > .wizard-input-btn:nth-of-type(3),
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > label.wizard-input-btn:nth-of-type(3) {
+  animation-delay: 0.17s;
+}
+
+body[data-active-view="view-kreator"] .wizard-step3-duration-btn,
+body[data-active-view="view-kreator"] .wizard-step3-links-item,
+body[data-active-view="view-kreator"] .wizard-step3-date-hero,
+body[data-active-view="view-kreator"] .wizard-back-btn,
+body[data-active-view="view-kreator"] .btn-link-nip-wizard,
+body[data-active-view="view-kreator"] .wizard-step2-voice-mic {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--wizard-micro-ms) var(--wizard-micro-ease),
+    background-color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    background var(--wizard-micro-ms) var(--wizard-micro-ease),
+    border-color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    color var(--wizard-micro-ms) var(--wizard-micro-ease),
+    box-shadow var(--wizard-micro-ms) var(--wizard-micro-ease),
+    opacity var(--wizard-micro-ms) var(--wizard-micro-ease);
+}
+
+body[data-active-view="view-kreator"] .wizard-step3-duration-btn:active,
+body[data-active-view="view-kreator"] .wizard-step3-links-item:active,
+body[data-active-view="view-kreator"] .wizard-step3-date-hero:active,
+body[data-active-view="view-kreator"] .wizard-back-btn:active,
+body[data-active-view="view-kreator"] .btn-link-nip-wizard:active,
+body[data-active-view="view-kreator"] .wizard-step2-voice-mic:active {
+  transform: scale(0.972);
+}
+
+body.wizard-klient-field-open[data-active-view="view-kreator"][data-wizard-krok="1"] .field-klient-plain:not(.wizard-micro-anim) {
+  animation: wizard-content-in 0.42s var(--wizard-micro-ease) both;
+}
+
+#wizard-step-2-entry.wizard-step2-mode-voice #wizard-step2-voice:not([hidden]):not(.wizard-micro-anim),
+#wizard-step-2-entry.wizard-step2-mode-photo #wizard-step2-photo:not([hidden]):not(.wizard-micro-anim) {
+  animation: wizard-content-in 0.42s var(--wizard-micro-ease) both;
+}
+
+@keyframes wizard-chrome-fade-in {
+  from {
+    opacity: 0.82;
+    transform: translate3d(0, -4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wizard-panel-in-forward {
+  from {
+    opacity: 0.82;
+    transform: translate3d(14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wizard-panel-in-back {
+  from {
+    opacity: 0.82;
+    transform: translate3d(-14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wizard-dot-active-pop {
+  from {
+    transform: scale(0.82);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward:not(.wizard-step-anim-js)
+  #oferta-form .accordion-section.wizard-step-active .accordion-body {
+  animation: wizard-panel-in-forward var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
+  will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-back:not(.wizard-step-anim-js)
+  #oferta-form .accordion-section.wizard-step-active .accordion-body {
+  animation: wizard-panel-in-back var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
+  will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="2"]:not(.wizard-hide-step2-entry):not(.wizard-step-anim-js)
+  #oferta-form .accordion-section.wizard-step-active .accordion-body,
+body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"]:not(.wizard-hide-step2-entry):not(.wizard-step-anim-js)
+  #oferta-form .accordion-section.wizard-step-active .accordion-body {
+  animation: none !important;
+  will-change: auto;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="2"]:not(.wizard-hide-step2-entry):not(.wizard-step-anim-js)
+  #wizard-step-2-entry {
+  animation: wizard-panel-in-forward var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
+  will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"]:not(.wizard-hide-step2-entry):not(.wizard-step-anim-js)
+  #wizard-step-2-entry {
+  animation: wizard-panel-in-back var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
+  will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-js
+  #oferta-form .accordion-section.wizard-step-active .accordion-body,
+body[data-active-view="view-kreator"].wizard-step-anim-js
+  #wizard-step-2-entry {
+  animation: none !important;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-mobile-chrome #wizard-header,
+body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-mobile-chrome #wizard-header {
+  animation: wizard-chrome-fade-in calc(var(--wizard-step-anim-ms) * 0.85) var(--wizard-step-anim-ease) both !important;
+  will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-dot.is-active,
+body[data-active-view="view-kreator"].wizard-step-anim-back .wizard-dot.is-active {
+  animation: wizard-dot-active-pop calc(var(--wizard-step-anim-ms) * 0.65) var(--wizard-step-anim-ease) both;
 }
 
 body.home-wizard-anim-prep,
@@ -7878,12 +8081,6 @@ body.home-wizard-anim-back #view-kreator:not(.hidden):not([hidden]) {
   pointer-events: none !important;
 }
 
-/* Kroki wizarda — tylko delikatny fade nagłówka (bez animacji paneli fixed) */
-body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-mobile-chrome #wizard-header,
-body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-mobile-chrome #wizard-header {
-  animation: wizard-chrome-fade-in 0.22s ease both;
-}
-
 @media (prefers-reduced-motion: reduce) {
   body.home-wizard-anim-forward #view-home:not(.hidden):not([hidden]),
   body.home-wizard-anim-back #view-home,
@@ -7893,6 +8090,24 @@ body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-mobile-chrom
   body.home-wizard-anim-back #wizard-mobile-chrome.is-active,
   body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-mobile-chrome #wizard-header,
   body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-mobile-chrome #wizard-header,
+  body[data-active-view="view-kreator"].wizard-step-anim-forward #oferta-form .accordion-section.wizard-step-active .accordion-body,
+  body[data-active-view="view-kreator"].wizard-step-anim-back #oferta-form .accordion-section.wizard-step-active .accordion-body,
+  body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-step-2-entry,
+  body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-step-2-entry,
+  body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-dot.is-active,
+  body[data-active-view="view-kreator"].wizard-step-anim-back .wizard-dot.is-active,
+  body[data-active-view="view-kreator"] .wizard-micro-anim,
+  body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-klient-methods > .wizard-input-btn,
+  body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > .wizard-input-btn,
+  body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-input-methods > label.wizard-input-btn,
+  body.wizard-klient-field-open[data-active-view="view-kreator"][data-wizard-krok="1"] .field-klient-plain,
+  #wizard-step-2-entry.wizard-step2-mode-voice #wizard-step2-voice:not([hidden]),
+  #wizard-step-2-entry.wizard-step2-mode-photo #wizard-step2-photo:not([hidden]) {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
   .home-total.home-total--in {
     animation: none !important;
     transition: none !important;

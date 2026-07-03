@@ -3890,6 +3890,15 @@
       if (chrome) {
         chrome.hidden = !pokazChrome;
         chrome.classList.toggle('is-active', pokazChrome);
+        if (pokazChrome) {
+          const header = document.getElementById('wizard-header');
+          if (header) {
+            const h = Math.ceil(header.getBoundingClientRect().height);
+            if (h > 0) {
+              document.documentElement.style.setProperty('--wizard-chrome-h', h + 'px');
+            }
+          }
+        }
       }
     }
 
@@ -5352,14 +5361,23 @@
       return document.querySelector('#oferta-form .accordion-section.wizard-step-active .accordion-body');
     }
 
-    function odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok) {
-      if (!MOBILE_MQL.matches || prevKrok === nextKrok || prevKrok === 0) return;
-      if (!animacjeWlaczone()) return;
+    function odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok, onDone) {
+      if (!MOBILE_MQL.matches || prevKrok === nextKrok || prevKrok === 0) {
+        if (typeof onDone === 'function') onDone();
+        return;
+      }
+      if (!animacjeWlaczone()) {
+        if (typeof onDone === 'function') onDone();
+        return;
+      }
 
       const kierunek = nextKrok > prevKrok ? 1 : -1;
       const cls = kierunek > 0 ? 'wizard-step-anim-forward' : 'wizard-step-anim-back';
       const panel = znajdzPanelAnimacjiKroku();
       const ease = WIZARD_STEP_EASE;
+      const step2EntryFlow = (prevKrok === 1 && nextKrok === 2) || (prevKrok === 2 && nextKrok === 1)
+        ? (nextKrok === 2 ? isWizardStep2EntryFlow() : true)
+        : false;
 
       document.body.classList.remove(
         'wizard-step-anim-forward',
@@ -5367,6 +5385,15 @@
         'wizard-step-anim-js'
       );
       clearTimeout(_wizardStepAnimTimer);
+
+      const zakoncz = () => {
+        document.body.classList.remove(
+          'wizard-step-anim-forward',
+          'wizard-step-anim-back',
+          'wizard-step-anim-js'
+        );
+        if (typeof onDone === 'function') onDone();
+      };
 
       const uruchom = () => {
         document.body.classList.add(cls);
@@ -5376,16 +5403,18 @@
           panel.getAnimations().forEach((a) => {
             try { a.cancel(); } catch (e) {}
           });
-          panel.style.willChange = 'transform, filter';
+          panel.style.willChange = 'transform, opacity';
+          const fromX = step2EntryFlow ? 0 : kierunek * 12;
+          const fromY = step2EntryFlow ? (kierunek > 0 ? 10 : -8) : 0;
           const anim = panel.animate(
             [
               {
-                transform: `translate3d(${kierunek * 14}px, 0, 0)`,
-                filter: 'opacity(0.82)',
+                transform: `translate3d(${fromX}px, ${fromY}px, 0)`,
+                opacity: 0.88,
               },
               {
                 transform: 'translate3d(0, 0, 0)',
-                filter: 'opacity(1)',
+                opacity: 1,
               },
             ],
             { duration: WIZARD_STEP_ANIM_MS, easing: ease, fill: 'both' }
@@ -5393,17 +5422,11 @@
           anim.finished.catch(() => {}).finally(() => {
             panel.style.willChange = '';
             panel.style.transform = '';
-            panel.style.filter = '';
+            panel.style.opacity = '';
           });
         }
 
-        _wizardStepAnimTimer = setTimeout(() => {
-          document.body.classList.remove(
-            'wizard-step-anim-forward',
-            'wizard-step-anim-back',
-            'wizard-step-anim-js'
-          );
-        }, WIZARD_STEP_ANIM_MS);
+        _wizardStepAnimTimer = setTimeout(zakoncz, WIZARD_STEP_ANIM_MS);
       };
 
       requestAnimationFrame(() => {
@@ -5477,8 +5500,7 @@
       }
 
       const ofertaForm = document.getElementById('oferta-form');
-      if (ofertaForm) ofertaForm.scrollTop = 0;
-      window.scrollTo(0, 0);
+      const animujPrzejscie = prevKrok !== nextKrok && animacjeWlaczone();
 
       if (_wizardKrok !== 2) {
         const vk = document.getElementById('view-kreator');
@@ -5493,9 +5515,21 @@
       odswiezWidoczneSekcjeWizarda();
       odswiezWizardPozycjeEntry();
       if (_wizardKrok === 3) odswiezWizardKrok3UI();
+      if (_wizardKrok === 2) {
+        syncWizardStep2ChromeHeight();
+      }
       odswiezWizardChrome();
       odswiezWalidacjeKlientaWizarda();
-      odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok);
+
+      const ustawScroll = () => {
+        if (ofertaForm) ofertaForm.scrollTop = 0;
+        window.scrollTo(0, 0);
+      };
+      if (!animujPrzejscie) {
+        ustawScroll();
+      }
+
+      odpalAnimacjePrzejsciaKroku(prevKrok, nextKrok, animujPrzejscie ? ustawScroll : null);
       saveDraft();
     }
 

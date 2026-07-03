@@ -486,11 +486,13 @@ body {
 }
 
 .wizard-header .wizard-step-info {
-  position: absolute;
-  inset: 0;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  align-self: center;
+  position: relative;
   z-index: 0;
-  grid-column: auto;
-  grid-row: auto;
+  min-width: 0;
 }
 
 .home-header .btn-home-settings,
@@ -3522,11 +3524,12 @@ body[data-active-view="view-kreator"] #view-kreator:not(.hidden):not([hidden]) {
   flex-direction: column;
   overflow: hidden;
   padding-top: var(--wizard-chrome-h, var(--mobile-top-chrome-h));
+  transition: padding-top var(--wizard-step-anim-ms) var(--wizard-step-anim-ease);
 }
 
 body[data-active-view="view-kreator"][data-wizard-krok="2"]:not(.wizard-hide-step2-entry)
   #view-kreator:not(.hidden):not([hidden]) {
-  padding-top: var(--wizard-chrome-h-step2, 228px);
+  padding-top: var(--wizard-chrome-h-step2, var(--wizard-chrome-h, var(--mobile-top-chrome-h)));
 }
 
 #view-kreator.view.hidden,
@@ -3600,6 +3603,19 @@ body:not([data-active-view="view-kreator"]) #wizard-mobile-chrome,
   background: var(--m-bg);
   overflow-x: clip;
   overflow-y: visible;
+  --mobile-top-chrome-inner-h: 72px;
+  height: calc(
+    var(--mobile-top-chrome-pad-top) +
+    var(--mobile-top-chrome-inner-h) +
+    var(--mobile-top-chrome-pad-bottom)
+  );
+  min-height: calc(
+    var(--mobile-top-chrome-pad-top) +
+    var(--mobile-top-chrome-inner-h) +
+    var(--mobile-top-chrome-pad-bottom)
+  );
+  max-height: none;
+  align-items: center;
 }
 
 /* Krok 3 — panel CTA pozycji */
@@ -4854,15 +4870,20 @@ select {
   }
 
   #firma-quick-modal .modal-card.firma-quick-card .modal-header {
-    padding: 20px 20px 0;
+    justify-content: center;
+    padding: 26px 20px 0;
+    border-bottom: none;
   }
 
   #firma-quick-modal .modal-card.firma-quick-card .modal-title {
     font-size: 17px;
+    text-align: center;
+    width: 100%;
+    letter-spacing: -0.02em;
   }
 
   #firma-quick-modal .modal-card.firma-quick-card .modal-body {
-    padding: 10px 20px 4px;
+    padding: 14px 20px 4px;
   }
 
   #firma-quick-modal .modal-card.firma-quick-card .modal-body .settings-hint {
@@ -5026,7 +5047,7 @@ select {
   justify-content: center;
   gap: 4px;
   margin: 0;
-  padding: 0 52px;
+  padding: 0 8px;
   min-width: 0;
   overflow: visible;
   pointer-events: none;
@@ -7108,7 +7129,7 @@ body[data-active-view="view-kreator"][data-wizard-krok="3"]
 
 body[data-active-view="view-kreator"][data-wizard-krok="2"]:not(.wizard-hide-step2-entry)
   #oferta-form .accordion-section.wizard-step-active .accordion-body {
-  top: var(--wizard-chrome-h-step2, 228px) !important;
+  top: var(--wizard-chrome-h-step2, var(--wizard-chrome-h, var(--mobile-top-chrome-h))) !important;
 }
 
 body[data-active-view="view-kreator"][data-wizard-krok="1"] .wizard-klient-methods {
@@ -7878,6 +7899,28 @@ body.wizard-klient-field-open[data-active-view="view-kreator"][data-wizard-krok=
   animation: wizard-content-in 0.42s var(--wizard-micro-ease) both;
 }
 
+@keyframes wizard-panel-in-forward-step2 {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wizard-panel-in-back-step2 {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @keyframes wizard-chrome-fade-in {
   from {
     opacity: 0.82;
@@ -7886,6 +7929,15 @@ body.wizard-klient-field-open[data-active-view="view-kreator"][data-wizard-krok=
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wizard-chrome-fade-only {
+  from {
+    opacity: 0.88;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -7942,20 +7994,20 @@ body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"
 
 body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="2"]:not(.wizard-hide-step2-entry):not(.wizard-step-anim-js)
   #wizard-step-2-entry {
-  animation: wizard-panel-in-forward var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
+  animation: wizard-panel-in-forward-step2 var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
   will-change: transform, opacity;
 }
 
 body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"]:not(.wizard-hide-step2-entry):not(.wizard-step-anim-js)
   #wizard-step-2-entry {
-  animation: wizard-panel-in-back var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
+  animation: wizard-panel-in-back-step2 var(--wizard-step-anim-ms) var(--wizard-step-anim-ease) both !important;
   will-change: transform, opacity;
 }
 
-body[data-active-view="view-kreator"].wizard-step-anim-js
-  #oferta-form .accordion-section.wizard-step-active .accordion-body,
-body[data-active-view="view-kreator"].wizard-step-anim-js
-  #wizard-step-2-entry {
+body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="2"]:not(.wizard-hide-step2-entry) #wizard-input-methods > .wizard-input-btn,
+body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="2"]:not(.wizard-hide-step2-entry) #wizard-input-methods > label.wizard-input-btn,
+body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"]:not(.wizard-hide-step2-entry) #wizard-input-methods > .wizard-input-btn,
+body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"]:not(.wizard-hide-step2-entry) #wizard-input-methods > label.wizard-input-btn {
   animation: none !important;
 }
 
@@ -7963,6 +8015,21 @@ body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-mobile-ch
 body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-mobile-chrome #wizard-header {
   animation: wizard-chrome-fade-in calc(var(--wizard-step-anim-ms) * 0.85) var(--wizard-step-anim-ease) both !important;
   will-change: transform, opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="2"] #wizard-mobile-chrome #wizard-header,
+body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="1"] #wizard-mobile-chrome #wizard-header,
+body[data-active-view="view-kreator"].wizard-step-anim-forward[data-wizard-krok="1"] #wizard-mobile-chrome #wizard-header,
+body[data-active-view="view-kreator"].wizard-step-anim-back[data-wizard-krok="2"] #wizard-mobile-chrome #wizard-header {
+  animation: wizard-chrome-fade-only calc(var(--wizard-step-anim-ms) * 0.85) var(--wizard-step-anim-ease) both !important;
+  will-change: opacity;
+}
+
+body[data-active-view="view-kreator"].wizard-step-anim-js
+  #oferta-form .accordion-section.wizard-step-active .accordion-body,
+body[data-active-view="view-kreator"].wizard-step-anim-js
+  #wizard-step-2-entry {
+  animation: none !important;
 }
 
 body[data-active-view="view-kreator"].wizard-step-anim-forward .wizard-dot.is-active,

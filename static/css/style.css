@@ -1879,6 +1879,18 @@
     .modal-card.confirm-card { max-width: 400px; }
     .modal-card.firma-quick-card { max-width: 420px; }
 
+    .modal-card.firma-quick-card .modal-header {
+      justify-content: center;
+      padding: 24px 24px 0;
+      border-bottom: none;
+    }
+
+    .modal-card.firma-quick-card .modal-title {
+      text-align: center;
+      width: 100%;
+      letter-spacing: -0.02em;
+    }
+
     .modal-card.firma-quick-card .modal-body .settings-hint {
       margin: 0 0 12px;
       font-size: 14px;

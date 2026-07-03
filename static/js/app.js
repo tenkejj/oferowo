@@ -5176,7 +5176,9 @@
           _wizardStep2Mode === 'voice' ? voicePanel
             : _wizardStep2Mode === 'photo' ? photoPanel
               : methodsPanel;
-        odpalWizardPanelMicroAnim(panel);
+        if (_wizardStep2Mode !== 'voice' && panel) {
+          odpalWizardPanelMicroAnim(panel);
+        }
       });
     }
 
@@ -5184,11 +5186,14 @@
       if (_wizardStep2Mode !== 'voice') return;
       const transcript = document.getElementById('wizard-step2-voice-transcript');
       const btnParse = document.getElementById('btn-wizard-step2-voice-parse');
+      const btnRetry = document.getElementById('btn-wizard-step2-voice-retry');
       const tekst = aiNotatka ? aiNotatka.value.trim() : '';
+      const loading = !!(btnParse && btnParse.getAttribute('aria-busy') === 'true');
       if (transcript) transcript.textContent = aiNotatka ? aiNotatka.value : '';
-      if (btnParse) btnParse.disabled = !tekst;
-      const micBtn = document.getElementById('btn-wizard-step2-mic');
-      if (micBtn) micBtn.classList.toggle('is-recording', !!speechRecording);
+      if (btnParse) btnParse.disabled = loading;
+      if (btnRetry) btnRetry.hidden = speechRecording || loading;
+      const micIndicator = document.getElementById('wizard-step2-mic-indicator');
+      if (micIndicator) micIndicator.classList.toggle('is-recording', !!speechRecording);
     }
 
     function ustawWizardStep2Status(tekst, typ) {
@@ -5228,11 +5233,11 @@
       }
       const btnParse = document.getElementById('btn-wizard-step2-voice-parse');
       if (btnParse) {
-        btnParse.disabled = true;
+        btnParse.disabled = false;
         btnParse.setAttribute('aria-busy', 'false');
       }
-      const voiceSpinner = document.getElementById('wizard-step2-voice-spinner');
-      if (voiceSpinner) voiceSpinner.hidden = true;
+      const btnRetry = document.getElementById('btn-wizard-step2-voice-retry');
+      if (btnRetry) btnRetry.hidden = true;
       const photoPanel = document.getElementById('wizard-step2-photo');
       if (photoPanel) photoPanel.classList.remove('is-loading');
     }
@@ -5243,13 +5248,44 @@
       speechBaseText = '';
       ustawWizardStep2Mode('voice');
       odswiezWizardStep2Transkrypt();
-      ustawWizardStep2Status('Mów teraz…');
+      ustawWizardStep2Status('Mów teraz — powiedz co wyceniasz');
       requestAnimationFrame(() => {
         if (typeof window.rozpocznijDyktowanieAi === 'function') {
           window.rozpocznijDyktowanieAi();
         }
         odswiezWizardStep2Transkrypt();
       });
+    }
+
+    function nagrajPonownieWizardGlos() {
+      if (!isWizardStep2EntryFlow() || _wizardStep2Mode !== 'voice') return;
+      if (typeof zatrzymajDyktowanie === 'function') {
+        try { zatrzymajDyktowanie(); } catch (_) {}
+      }
+      if (aiNotatka) aiNotatka.value = '';
+      speechBaseText = '';
+      odswiezWizardStep2Transkrypt();
+      ustawWizardStep2Status('Mów teraz — powiedz co wyceniasz');
+      if (typeof window.rozpocznijDyktowanieAi === 'function') {
+        window.rozpocznijDyktowanieAi();
+      }
+    }
+
+    function zakonczNagranieWizardGlos() {
+      if (_wizardStep2Mode !== 'voice') return;
+      if (speechRecording && typeof zatrzymajDyktowanie === 'function') {
+        zatrzymajDyktowanie();
+      }
+      const tekst = aiNotatka ? aiNotatka.value.trim() : '';
+      if (!tekst) {
+        ustawWizardStep2Status('Nic nie usłyszałem — spróbuj mówić głośniej.', 'error');
+        odswiezWizardStep2Transkrypt();
+        if (typeof window.rozpocznijDyktowanieAi === 'function') {
+          window.rozpocznijDyktowanieAi();
+        }
+        return;
+      }
+      przetworzNotatkeAi();
     }
 
     async function przetworzZdjecieWizardaInline(file) {
@@ -5608,29 +5644,17 @@
         });
       }
 
-      const btnWizVoiceMic = document.getElementById('btn-wizard-step2-mic');
-      if (btnWizVoiceMic) {
-        btnWizVoiceMic.addEventListener('click', () => {
-          if (speechRecording) {
-            if (typeof zatrzymajDyktowanie === 'function') zatrzymajDyktowanie();
-            ustawWizardStep2Status('Nagranie zatrzymane — możesz rozpoznać pozycje.');
-            odswiezWizardStep2Transkrypt();
-            return;
-          }
-          if (typeof window.rozpocznijDyktowanieAi === 'function') {
-            window.rozpocznijDyktowanieAi();
-          }
-          odswiezWizardStep2Transkrypt();
-        });
-      }
-
       const btnWizVoiceParse = document.getElementById('btn-wizard-step2-voice-parse');
       if (btnWizVoiceParse) {
         btnWizVoiceParse.addEventListener('click', () => {
-          if (speechRecording && typeof zatrzymajDyktowanie === 'function') {
-            zatrzymajDyktowanie();
-          }
-          przetworzNotatkeAi();
+          zakonczNagranieWizardGlos();
+        });
+      }
+
+      const btnWizVoiceRetry = document.getElementById('btn-wizard-step2-voice-retry');
+      if (btnWizVoiceRetry) {
+        btnWizVoiceRetry.addEventListener('click', () => {
+          nagrajPonownieWizardGlos();
         });
       }
 
@@ -6002,16 +6026,17 @@
 
     function ustawStanLadowaniaAiParse(loading) {
       const btnVoiceParse = document.getElementById('btn-wizard-step2-voice-parse');
-      const voiceSpinner = document.getElementById('wizard-step2-voice-spinner');
       const voiceCtaLabel = document.querySelector('.wizard-step2-voice-cta-label');
       const photoPanel = document.getElementById('wizard-step2-photo');
 
       if (_wizardStep2Mode === 'voice' && btnVoiceParse) {
-        const maTekst = !!(aiNotatka && aiNotatka.value.trim());
-        btnVoiceParse.disabled = loading || !maTekst;
+        btnVoiceParse.disabled = !!loading;
         btnVoiceParse.setAttribute('aria-busy', loading ? 'true' : 'false');
-        if (voiceSpinner) voiceSpinner.hidden = !loading;
-        if (voiceCtaLabel) voiceCtaLabel.textContent = loading ? 'Przygotowuję…' : 'Rozpoznaj pozycje';
+        if (voiceCtaLabel) voiceCtaLabel.textContent = 'Gotowe';
+        if (loading) {
+          ustawWizardStep2Status('Rozpoznaję pozycje…');
+        }
+        odswiezWizardStep2Transkrypt();
       }
       if (_wizardStep2Mode === 'photo' && photoPanel) {
         photoPanel.classList.toggle('is-loading', !!loading);
@@ -6596,7 +6621,11 @@
           speechBaseText = aiNotatka ? aiNotatka.value : '';
           btnAiMic.classList.add('is-recording');
           speechRecognition.start();
-          ustawAiParseStatus('Mów teraz — dotknij mikrofonu, aby zakończyć.', 'info');
+          if (_wizardStep2Mode === 'voice' && MOBILE_MQL.matches && wizardMobileAktywny() && _wizardKrok === 2) {
+            ustawWizardStep2Status('Mów teraz — tapnij Gotowe, gdy skończysz');
+          } else {
+            ustawAiParseStatus('Mów teraz — dotknij mikrofonu, aby zakończyć.', 'info');
+          }
           odswiezWizardStep2Transkrypt();
           return true;
         } catch (e) {

@@ -3859,9 +3859,9 @@ body[data-wizard-step2-mode="photo"] .wizard-step2-panel--methods,
   border-radius: 50%;
   background: #C0143C;
   color: #ffffff;
-  cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: none;
+  user-select: none;
 }
 
 .wizard-step2-voice-mic.is-recording {
@@ -3909,7 +3909,7 @@ body[data-wizard-step2-mode="photo"] .wizard-step2-panel--methods,
 }
 
 .wizard-step2-voice-transcript:empty::before {
-  content: "Transkrypt pojawi się tutaj…";
+  content: "Tu zobaczysz to, co mówisz…";
   color: var(--text-muted);
 }
 
@@ -3932,7 +3932,27 @@ body[data-wizard-step2-mode="photo"] .wizard-step2-panel--methods,
 }
 
 .wizard-step2-voice-cta:disabled {
-  opacity: 0.45;
+  opacity: 0.55;
+}
+
+.wizard-step2-voice-retry {
+  display: block;
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wizard-step2-voice-retry:active {
+  color: var(--text);
 }
 
 .wizard-step2-photo-preview {
@@ -3952,8 +3972,7 @@ body[data-wizard-step2-mode="photo"] .wizard-step2-panel--methods,
   border: 1px solid var(--m-border);
 }
 
-.wizard-step2-photo-spinner,
-.wizard-step2-voice-spinner {
+.wizard-step2-photo-spinner {
   display: inline-block;
   width: 28px;
   height: 28px;
@@ -7872,7 +7891,7 @@ body[data-active-view="view-kreator"] .wizard-step3-links-item,
 body[data-active-view="view-kreator"] .wizard-step3-date-hero,
 body[data-active-view="view-kreator"] .wizard-back-btn,
 body[data-active-view="view-kreator"] .btn-link-nip-wizard,
-body[data-active-view="view-kreator"] .wizard-step2-voice-mic {
+body[data-active-view="view-kreator"] .wizard-step2-voice-retry {
   -webkit-tap-highlight-color: transparent;
   transition:
     transform var(--wizard-micro-ms) var(--wizard-micro-ease),
@@ -7889,7 +7908,7 @@ body[data-active-view="view-kreator"] .wizard-step3-links-item:active,
 body[data-active-view="view-kreator"] .wizard-step3-date-hero:active,
 body[data-active-view="view-kreator"] .wizard-back-btn:active,
 body[data-active-view="view-kreator"] .btn-link-nip-wizard:active,
-body[data-active-view="view-kreator"] .wizard-step2-voice-mic:active {
+body[data-active-view="view-kreator"] .wizard-step2-voice-retry:active {
   transform: scale(0.972);
 }
 
@@ -7897,7 +7916,6 @@ body.wizard-klient-field-open[data-active-view="view-kreator"][data-wizard-krok=
   animation: wizard-content-in 0.42s var(--wizard-micro-ease) both;
 }
 
-#wizard-step-2-entry.wizard-step2-mode-voice #wizard-step2-voice:not([hidden]):not(.wizard-micro-anim),
 #wizard-step-2-entry.wizard-step2-mode-photo #wizard-step2-photo:not([hidden]):not(.wizard-micro-anim) {
   animation: wizard-content-in 0.42s var(--wizard-micro-ease) both;
 }

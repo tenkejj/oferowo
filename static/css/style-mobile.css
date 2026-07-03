@@ -1379,6 +1379,8 @@ body[data-active-view="view-kreator"] .mobile-chrome {
   gap: 8px;
   margin-top: 8px;
 }
+
+#accordion-body-szczegoly .date-helpers .chip {
   flex: 1;
   height: 56px;
   min-height: 56px;

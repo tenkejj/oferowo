@@ -3184,6 +3184,12 @@
       font-size: 11px;
     }
 
+    .settings-pwa-platform {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
     .settings-chips {
       display: flex;
       flex-wrap: wrap;

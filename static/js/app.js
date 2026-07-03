@@ -2942,13 +2942,19 @@
       sec.hidden = !pokaz;
 
       const hintSafari = document.getElementById('settings-pwa-hint-ios-safari');
+      const labelSafari = document.getElementById('settings-pwa-label-ios-safari');
       const noteSafari = document.getElementById('settings-pwa-note-ios-safari');
       const hintChrome = document.getElementById('settings-pwa-hint-ios-chrome');
+      const labelChrome = document.getElementById('settings-pwa-label-ios-chrome');
       const hintAndroid = document.getElementById('settings-pwa-hint-android');
+      const labelAndroid = document.getElementById('settings-pwa-label-android');
       if (hintSafari) hintSafari.hidden = !isIOS || isIosChrome;
+      if (labelSafari) labelSafari.hidden = !isIOS || isIosChrome;
       if (noteSafari) noteSafari.hidden = !isIOS || isIosChrome;
       if (hintChrome) hintChrome.hidden = !isIosChrome;
+      if (labelChrome) labelChrome.hidden = !isIosChrome;
       if (hintAndroid) hintAndroid.hidden = !isAndroid;
+      if (labelAndroid) labelAndroid.hidden = !isAndroid;
     }
 
     function odswiezSzkicUI() {

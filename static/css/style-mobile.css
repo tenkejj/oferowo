@@ -8146,3 +8146,40 @@ body[data-active-view="view-kreator"][data-wizard-krok="2"] #wizard-step-2-entry
   flex: 1 1 auto !important;
   min-height: 0 !important;
 }
+
+/* PWA (skrót na ekranie głównym): większy tab bar + safe-area u dołu */
+@media (display-mode: standalone) {
+  :root {
+    --tab-bar-h: 84px;
+    --tab-icon-size: 26px;
+    --tab-label-size: 12px;
+  }
+
+  .page-nav-row .view-tabs {
+    padding-top: 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .view-tab {
+    min-height: 60px;
+    gap: 6px;
+    padding: 6px 4px 4px;
+  }
+}
+
+html.is-standalone {
+  --tab-bar-h: 84px;
+  --tab-icon-size: 26px;
+  --tab-label-size: 12px;
+}
+
+html.is-standalone .page-nav-row .view-tabs {
+  padding-top: 10px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+html.is-standalone .view-tab {
+  min-height: 60px;
+  gap: 6px;
+  padding: 6px 4px 4px;
+}

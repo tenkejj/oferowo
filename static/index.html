@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>SumIt</title>
   <script>
     (function () {
@@ -12,6 +12,9 @@
           ? zapis
           : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', motyw);
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+          || window.navigator.standalone === true;
+        if (standalone) document.documentElement.classList.add('is-standalone');
       } catch (e) {}
     })();
   </script>
@@ -793,8 +796,18 @@
         </section>
         <section class="settings-section settings-section-pwa" id="settings-pwa-section" hidden>
           <h4 class="settings-section-title">Aplikacja na telefonie</h4>
-          <p class="settings-hint settings-pwa-hint"><strong>iPhone:</strong> Otwórz <strong>sum-it.app</strong> w przeglądarce <strong>Safari</strong> (nie w Chrome), dotknij <strong>Udostępnij</strong> (kwadrat ze strzałką) i wybierz <strong>Do ekranu początkowego</strong>.</p>
-          <p class="settings-hint settings-pwa-hint settings-hint-gap"><strong>Android:</strong> Otwórz SumIt w <strong>Chrome</strong>, dotknij <strong>menu</strong> (⋮) i wybierz <strong>Zainstaluj aplikację</strong> lub <strong>Dodaj do ekranu głównego</strong>. Jeśli nie widzisz opcji — odśwież stronę i spróbuj ponownie.</p>
+          <p class="settings-hint">Dodaj SumIt na ekran główny — otworzy się jak aplikacja.</p>
+          <ol class="settings-pwa-steps" id="settings-pwa-hint-ios-safari" hidden>
+            <li><strong>⋯</strong> u dołu → <strong>Udostępnij</strong></li>
+            <li><strong>Do ekranu początkowego</strong> → <strong>Dodaj</strong></li>
+          </ol>
+          <p class="settings-hint settings-pwa-note" id="settings-pwa-note-ios-safari" hidden>Brak opcji? Na dole listy: <strong>Edytuj działania</strong>.</p>
+          <ol class="settings-pwa-steps" id="settings-pwa-hint-ios-chrome" hidden>
+            <li><strong>⋮</strong> u dołu → <strong>Dodaj do ekranu początkowego</strong></li>
+          </ol>
+          <ol class="settings-pwa-steps" id="settings-pwa-hint-android" hidden>
+            <li><strong>⋮</strong> w Chrome → <strong>Zainstaluj aplikację</strong></li>
+          </ol>
         </section>
         <section class="settings-section settings-section-contact">
           <h4 class="settings-section-title">Kontakt</h4>

@@ -3163,6 +3163,27 @@
       margin-top: 14px;
     }
 
+    .settings-pwa-steps {
+      margin: 0 0 10px 1.15em;
+      padding: 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: -0.005em;
+    }
+
+    .settings-pwa-steps li {
+      margin-bottom: 6px;
+    }
+
+    .settings-pwa-steps li:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-pwa-note {
+      margin-top: -2px;
+      font-size: 11px;
+    }
+
     .settings-chips {
       display: flex;
       flex-wrap: wrap;

@@ -557,6 +557,9 @@ body {
   min-height: 0;
   padding-bottom: 0;
   overscroll-behavior-y: none;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background: var(--m-bg) !important;
   color: var(--text, #ffffff);
 }
@@ -8251,7 +8254,7 @@ html.is-standalone .view-tab {
   padding: 6px 4px 4px;
 }
 
-/* iOS Safari: font-size < 16px przy focus = auto-zoom i rozjeżdżony layout */
+/* Mobile (iPhone, Android, PWA): font-size < 16px przy focus = auto-zoom i rozjeżdżony layout */
 input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not([type="image"]),
 textarea,
 select {

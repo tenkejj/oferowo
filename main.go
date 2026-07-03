@@ -36,10 +36,12 @@ func main() {
 	mux.Handle("GET /", utf8Middleware(indexHandler))
 
 	mux.Handle("GET /sw.js", utf8Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		http.ServeFile(w, r, "static/js/sw.js")
 	})))
 
 	mux.Handle("GET /manifest.webmanifest", utf8Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=3600")
 		http.ServeFile(w, r, "static/manifest.json")
 	})))
 

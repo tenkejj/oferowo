@@ -8161,7 +8161,7 @@ body[data-active-view="view-kreator"][data-wizard-krok="2"] #wizard-step-2-entry
   }
 
   .view-tab {
-    min-height: 60px;
+    min-height: 64px;
     gap: 6px;
     padding: 6px 4px 4px;
   }
@@ -8179,7 +8179,7 @@ html.is-standalone .page-nav-row .view-tabs {
 }
 
 html.is-standalone .view-tab {
-  min-height: 60px;
+  min-height: 64px;
   gap: 6px;
   padding: 6px 4px 4px;
 }

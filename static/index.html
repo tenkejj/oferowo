@@ -12,9 +12,16 @@
           ? zapis
           : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', motyw);
-        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
-          || window.navigator.standalone === true;
+        var standalone = (window.matchMedia && (
+          window.matchMedia('(display-mode: standalone)').matches
+          || window.matchMedia('(display-mode: fullscreen)').matches
+        )) || window.navigator.standalone === true;
         if (standalone) document.documentElement.classList.add('is-standalone');
+        var themeColor = motyw === 'dark' ? '#0a0a0a' : '#ffffff';
+        var tcMeta = document.getElementById('meta-theme-color');
+        if (tcMeta) tcMeta.setAttribute('content', themeColor);
+        var sbMeta = document.getElementById('meta-status-bar');
+        if (sbMeta) sbMeta.setAttribute('content', motyw === 'dark' ? 'black-translucent' : 'default');
       } catch (e) {}
     })();
   </script>
@@ -24,14 +31,22 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="/static/css/style-mobile.css" media="(max-width: 1023px)">
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0a0a0a">
+  <meta name="theme-color" content="#0a0a0a" id="meta-theme-color">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="SumIt">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" id="meta-status-bar">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16.png">
-  <link rel="apple-touch-icon" href="/static/icons/pwa-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/pwa-192.png">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/dark-1170x2532.png" media="(prefers-color-scheme: dark) and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/light-1170x2532.png" media="(prefers-color-scheme: light) and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/dark-1290x2796.png" media="(prefers-color-scheme: dark) and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/light-1290x2796.png" media="(prefers-color-scheme: light) and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/dark-750x1334.png" media="(prefers-color-scheme: dark) and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/light-750x1334.png" media="(prefers-color-scheme: light) and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/dark-1170x2532.png" media="(prefers-color-scheme: dark) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash/light-1170x2532.png" media="(prefers-color-scheme: light) and (orientation: portrait)">
 </head>
 <body data-active-view="view-home">
   <div class="page">
@@ -1099,7 +1114,17 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+        navigator.serviceWorker.getRegistrations()
+          .then((regs) => Promise.all(regs.map((reg) => {
+            const scriptURL = reg.active?.scriptURL
+              || reg.installing?.scriptURL
+              || reg.waiting?.scriptURL
+              || '';
+            if (scriptURL.includes('/static/js/sw.js')) return reg.unregister();
+            return false;
+          })))
+          .then(() => navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+          .catch(() => {});
       });
     }
   </script>

@@ -347,16 +347,32 @@
       });
     }
 
+    function aktualizujThemeColorMeta(motyw) {
+      const meta = document.getElementById('meta-theme-color');
+      if (!meta) return;
+      meta.setAttribute('content', motyw === 'dark' ? '#0a0a0a' : '#ffffff');
+    }
+
+    function aktualizujStatusBarMeta(motyw) {
+      const meta = document.getElementById('meta-status-bar');
+      if (!meta) return;
+      meta.setAttribute('content', motyw === 'dark' ? 'black-translucent' : 'default');
+    }
+
     function ustawMotyw(motyw, zapisz) {
       const nowy = motyw === 'dark' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', nowy);
       aktualizujOpisPrzeciskaMotywu(nowy);
+      aktualizujThemeColorMeta(nowy);
+      aktualizujStatusBarMeta(nowy);
       if (zapisz) {
         try { localStorage.setItem(STORAGE_KEY_THEME, nowy); } catch (e) {}
       }
     }
 
     aktualizujOpisPrzeciskaMotywu(aktualnyMotyw());
+    aktualizujThemeColorMeta(aktualnyMotyw());
+    aktualizujStatusBarMeta(aktualnyMotyw());
 
     themeButtons.forEach((btn) => {
       btn.addEventListener('click', () => {

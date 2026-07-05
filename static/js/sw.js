@@ -1,4 +1,4 @@
-const CACHE = 'sumit-shell-v4';
+const CACHE = 'sumit-shell-v5';
 
 const SHELL_URLS = [
   '/',
@@ -14,6 +14,10 @@ function isApiRequest(url) {
   return url.pathname.startsWith('/api/')
     || url.pathname === '/quote'
     || url.pathname === '/stats';
+}
+
+function isNetworkFirstStatic(pathname) {
+  return pathname.endsWith('.css') || pathname.endsWith('.js');
 }
 
 self.addEventListener('install', (event) => {
@@ -55,6 +59,21 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.startsWith('/static/')) {
+    if (isNetworkFirstStatic(url.pathname)) {
+      event.respondWith(
+        fetch(event.request)
+          .then((response) => {
+            if (response.ok) {
+              const copy = response.clone();
+              caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+            }
+            return response;
+          })
+          .catch(() => caches.match(event.request)),
+      );
+      return;
+    }
+
     event.respondWith(
       caches.match(event.request).then((cached) => {
         const network = fetch(event.request).then((response) => {

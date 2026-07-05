@@ -4296,6 +4296,59 @@
       mql.addEventListener('change', clamp);
     }
 
+    function initMobileInputZoomFix() {
+      if (!MOBILE_MQL.matches) return;
+      const vp = document.querySelector('meta[name="viewport"]');
+      if (!vp) return;
+
+      const baseVp = 'width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content';
+      const lockedVp = baseVp + ', maximum-scale=1';
+
+      function isEditableField(el) {
+        if (!el || typeof el.matches !== 'function') return false;
+        if (el.matches('textarea, select')) return true;
+        if (!el.matches('input')) return false;
+        const type = String(el.type || 'text').toLowerCase();
+        return !['button', 'submit', 'reset', 'checkbox', 'radio', 'hidden', 'file', 'image'].includes(type);
+      }
+
+      function ensureMinFontSize(el) {
+        const px = parseFloat(window.getComputedStyle(el).fontSize);
+        if (Number.isFinite(px) && px < 16) {
+          el.style.fontSize = '16px';
+        }
+      }
+
+      let unlockTimer = null;
+
+      function lockViewport() {
+        vp.setAttribute('content', lockedVp);
+      }
+
+      function unlockViewport() {
+        vp.setAttribute('content', baseVp);
+      }
+
+      document.addEventListener('focusin', (e) => {
+        if (!isEditableField(e.target)) return;
+        clearTimeout(unlockTimer);
+        ensureMinFontSize(e.target);
+        lockViewport();
+      }, true);
+
+      document.addEventListener('focusout', () => {
+        clearTimeout(unlockTimer);
+        unlockTimer = setTimeout(() => {
+          if (isEditableField(document.activeElement)) return;
+          unlockViewport();
+        }, 150);
+      }, true);
+
+      MOBILE_MQL.addEventListener('change', (e) => {
+        if (!e.matches) unlockViewport();
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // Viewer mode: ?w= → renderuj read-only podgląd dla klienta, pomiń init edytora
       const _wParam = new URLSearchParams(location.search).get('w');
@@ -4329,6 +4382,7 @@
       initMobileStickyHeader();
       initMobileAiSheet();
       initMobileScrollClamp();
+      initMobileInputZoomFix();
 
       odswiezPwaHint();
 

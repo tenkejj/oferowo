@@ -888,7 +888,8 @@
     function odswiezWizardKrok3Podsumowanie() {
       const line = document.getElementById('wizard-step3-summary-text');
       if (!line || !MOBILE_MQL.matches || _wizardKrok !== 3) return;
-      const { pozycje } = budujPayloadZFormularza();
+      const dane = budujPayloadZFormularza();
+      const pozycje = (dane.payload && dane.payload.pozycje) || [];
       const liczba = pozycje.length;
       const pozLabel = liczba === 1 ? '1 poz.' : liczba + ' poz.';
       const suma = formatujKwote(obliczSumePozycji(pozycje));

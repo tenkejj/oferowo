@@ -20,7 +20,7 @@
 
 Fill in a form, get a PDF estimate. SumIt is built for Polish electricians, plumbers, and small service crews who need a proper estimate on site — not another SaaS with a 20-step onboarding.
 
-No account. No database. Your drafts and client history stay in the browser (`localStorage`). The Go server renders PDFs, proxies the MF White List and Groq AI APIs, and can export KSeF helper XML — no CORS headaches on NIP lookup.
+No account. No database. Your drafts and client history stay in the browser (`localStorage`). The Go server renders PDFs, proxies the MF White List and Groq AI APIs, and can export KSeF helper XML — no CORS headaches on NIP lookup. A short privacy summary is in **Settings** inside the app.
 
 **Live:** [https://www.sum-it.app/](https://www.sum-it.app/) — Oracle Cloud (Ubuntu 24.04), nginx + Let's Encrypt, `./deploy.sh` + systemd.
 
@@ -34,17 +34,17 @@ No account. No database. Your drafts and client history stay in the browser (`lo
 - Client autocomplete from your estimate history
 - Service catalog, CSV import/export, profit estimate per line item
 - Stats dashboard (KPI, chart, top clients, activity heatmap), full estimate history
-- **Mobile app UX** — home screen, 3-step wizard, bottom tabs (Estimate / History / Company / Stats), PWA install
+- **Mobile app UX** — home screen, 3-step wizard (voice, photo, manual entry), bottom tabs (Estimate / History / Company / Stats), installable PWA with offline shell
 - Share PDF with the client (Web Share API), copy a review link, client acceptance flow
 - **KSeF helper** — download FA(3) XML for manual upload to KSeF (not e-invoicing itself)
-- App settings: theme, default validity, default document type & VAT rate, local data reset, contact
+- App settings: theme, default validity, default document type & VAT rate, local data reset, **privacy summary**, contact
 - Light/dark mode, live PDF preview on desktop
 
 ### Stack
 
 | Layer | Tech |
 |---|---|
-| Backend | Go 1.22+, `net/http`, [go-pdf/fpdf](https://github.com/go-pdf/fpdf), [go-qrcode](https://github.com/skip2/go-qrcode) |
+| Backend | Go 1.26+, `net/http`, [go-pdf/fpdf](https://github.com/go-pdf/fpdf), [go-qrcode](https://github.com/skip2/go-qrcode) |
 | Frontend | HTML, CSS, vanilla JS — no npm, no bundler |
 
 ### Project layout
@@ -85,7 +85,7 @@ Maintainers: see [deploy/DEPLOY.md](deploy/DEPLOY.md) for VPS setup.
 
 Wypełniasz formularz, dostajesz PDF z wyceną. SumIt jest pod hydraulików, elektryków i małe ekipy remontowe — ludzi, którzy potrzebują wyceny u klienta, a nie kolejnej aplikacji z rejestracją i panelem admina.
 
-Bez konta. Bez bazy danych. Szkice i historia klientów siedzą w przeglądarce (`localStorage`). Serwer Go generuje PDF, proxy do Białej Listy MF i API Groq (AI) oraz eksportuje pomocniczy XML KSeF — bez problemów z CORS przy NIP.
+Bez konta. Bez bazy danych. Szkice i historia klientów siedzą w przeglądarce (`localStorage`). Serwer Go generuje PDF, proxy do Białej Listy MF i API Groq (AI) oraz eksportuje pomocniczy XML KSeF — bez problemów z CORS przy NIP. Skrót polityki prywatności jest w **Ustawieniach** w aplikacji.
 
 **Produkcja:** [https://www.sum-it.app/](https://www.sum-it.app/) — Oracle Cloud (Ubuntu 24.04), nginx + Let's Encrypt, wdrożenie przez `./deploy.sh` + systemd.
 
@@ -99,17 +99,17 @@ Bez konta. Bez bazy danych. Szkice i historia klientów siedzą w przeglądarce 
 - Autouzupełnianie klientów z historii wycen
 - Katalog usług, import/eksport CSV, szacowany zysk na pozycji
 - Statystyki (KPI, wykres, top klienci, heatmapa aktywności), pełna historia wycen
-- **Mobile** — ekran startowy, kreator 3 kroków, dolne zakładki (Wycena / Historia / Firma / Statystyki), instalacja PWA
+- **Mobile** — ekran startowy, kreator 3 kroków (głos, zdjęcie, ręcznie), dolne zakładki (Wycena / Historia / Firma / Statystyki), instalowalna PWA z cache offline
 - Udostępnianie PDF klientowi (Web Share API), link do podglądu, akceptacja wyceny przez klienta
 - **Pomocnik KSeF** — pobieranie XML FA(3) do ręcznego wgrania w KSeF (to nie jest samo wysyłanie e-faktury)
-- Ustawienia aplikacji: motyw, domyślna ważność, typ dokumentu i stawka VAT, czyszczenie danych lokalnych, kontakt
+- Ustawienia aplikacji: motyw, domyślna ważność, typ dokumentu i stawka VAT, czyszczenie danych lokalnych, **skrót polityki prywatności**, kontakt
 - Tryb jasny/ciemny, podgląd PDF na żywo na desktopie
 
 ### Stack
 
 | Warstwa | Technologie |
 |---|---|
-| Backend | Go 1.22+, `net/http`, [go-pdf/fpdf](https://github.com/go-pdf/fpdf), [go-qrcode](https://github.com/skip2/go-qrcode) |
+| Backend | Go 1.26+, `net/http`, [go-pdf/fpdf](https://github.com/go-pdf/fpdf), [go-qrcode](https://github.com/skip2/go-qrcode) |
 | Frontend | HTML, CSS, vanilla JS — bez npm, bez bundlera |
 
 ### Struktura projektu

@@ -25,7 +25,8 @@
   --home-cta-pad-y: 20px;
   --home-cta-pad-x: 12px;
   --home-cta-inner-gap: 12px;
-  --home-wizard-anim-ms: 360ms;
+  --home-wizard-anim-ms: 520ms;
+  --home-wizard-anim-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --wizard-step-anim-ms: 520ms;
   --wizard-step-anim-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --wizard-micro-ms: 240ms;
@@ -8158,7 +8159,7 @@ body[data-active-view="view-kreator"] #view-home:not(.hidden):not([hidden]) {
   overflow: hidden;
   isolation: isolate;
   height: auto;
-  will-change: opacity;
+  will-change: transform, opacity;
 }
 
 [data-theme="light"] body.home-wizard-anim-prep #view-home:not(.hidden):not([hidden]),
@@ -8180,21 +8181,24 @@ body.home-wizard-anim-prep #wizard-mobile-chrome.is-active {
   transition: none !important;
 }
 
-body.home-wizard-anim-forward #view-home:not(.hidden):not([hidden]) {
+body.home-wizard-anim-forward:not(.home-wizard-anim-js) #view-home:not(.hidden):not([hidden]) {
   opacity: 0 !important;
-  transition: opacity var(--home-wizard-anim-ms) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-body.home-wizard-anim-forward #view-kreator:not(.hidden):not([hidden]) {
+body.home-wizard-anim-forward:not(.home-wizard-anim-js) #view-kreator:not(.hidden):not([hidden]) {
   opacity: 1 !important;
-  transition: opacity var(--home-wizard-anim-ms) cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity;
+  will-change: transform, opacity;
 }
 
-body.home-wizard-anim-forward #wizard-mobile-chrome.is-active {
+body.home-wizard-anim-forward:not(.home-wizard-anim-js) #wizard-mobile-chrome.is-active {
   opacity: 1 !important;
-  transition: opacity var(--home-wizard-anim-ms) cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity;
+  will-change: transform, opacity;
+}
+
+body.home-wizard-anim-js #view-home:not(.hidden):not([hidden]),
+body.home-wizard-anim-js #view-kreator:not(.hidden):not([hidden]),
+body.home-wizard-anim-js #wizard-mobile-chrome.is-active {
+  transition: none !important;
 }
 
 body.home-wizard-anim-back-prep #view-home:not(.hidden):not([hidden]),
@@ -8209,25 +8213,29 @@ body.home-wizard-anim-back-prep #wizard-mobile-chrome.is-active {
   transition: none !important;
 }
 
-body.home-wizard-anim-back #view-home:not(.hidden):not([hidden]),
-body.home-wizard-anim-back #view-home {
+body.home-wizard-anim-back:not(.home-wizard-anim-js) #view-home:not(.hidden):not([hidden]),
+body.home-wizard-anim-back:not(.home-wizard-anim-js) #view-home {
   opacity: 1 !important;
-  transition: opacity var(--home-wizard-anim-ms) cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none !important;
 }
 
-body.home-wizard-anim-back #view-kreator:not(.hidden):not([hidden]) {
+body.home-wizard-anim-back:not(.home-wizard-anim-js) #view-kreator:not(.hidden):not([hidden]) {
   opacity: 0 !important;
-  transition: opacity var(--home-wizard-anim-ms) cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none !important;
-  will-change: opacity;
+  will-change: transform, opacity;
 }
 
-body.home-wizard-anim-back #wizard-mobile-chrome.is-active {
+body.home-wizard-anim-back:not(.home-wizard-anim-js) #wizard-mobile-chrome.is-active {
   opacity: 0 !important;
-  transition: opacity var(--home-wizard-anim-ms) cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none !important;
-  will-change: opacity;
+  will-change: transform, opacity;
+}
+
+body.home-wizard-anim-back.home-wizard-anim-js #view-home:not(.hidden):not([hidden]),
+body.home-wizard-anim-back.home-wizard-anim-js #view-home,
+body.home-wizard-anim-back.home-wizard-anim-js #view-kreator:not(.hidden):not([hidden]),
+body.home-wizard-anim-back.home-wizard-anim-js #wizard-mobile-chrome.is-active {
+  pointer-events: none !important;
 }
 
 body.home-wizard-anim-prep .home-footer,
@@ -8248,6 +8256,9 @@ body.home-wizard-anim-back #view-kreator:not(.hidden):not([hidden]) {
   body.home-wizard-anim-back #view-kreator:not(.hidden):not([hidden]),
   body.home-wizard-anim-forward #wizard-mobile-chrome.is-active,
   body.home-wizard-anim-back #wizard-mobile-chrome.is-active,
+  body.home-wizard-anim-js #view-home:not(.hidden):not([hidden]),
+  body.home-wizard-anim-js #view-kreator:not(.hidden):not([hidden]),
+  body.home-wizard-anim-js #wizard-mobile-chrome.is-active,
   body[data-active-view="view-kreator"].wizard-step-anim-forward #wizard-mobile-chrome #wizard-header,
   body[data-active-view="view-kreator"].wizard-step-anim-back #wizard-mobile-chrome #wizard-header,
   body[data-active-view="view-kreator"].wizard-step-anim-forward #oferta-form .accordion-section.wizard-step-active .accordion-body,

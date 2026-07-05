@@ -1,4 +1,4 @@
-const CACHE = 'sumit-shell-v5';
+const CACHE = 'sumit-shell-v6';
 
 const SHELL_URLS = [
   '/',

@@ -4507,7 +4507,7 @@
       el.getAnimations().forEach((a) => {
         try { a.cancel(); } catch (e) {}
       });
-      el.style.willChange = 'transform, opacity';
+      el.style.willChange = 'opacity';
       const anim = el.animate(keyframes, {
         duration: HOME_WIZARD_ANIM_MS,
         easing: WIZARD_STEP_EASE,
@@ -4515,6 +4515,35 @@
         ...(options || {}),
       });
       return anim.finished.catch(() => {});
+    }
+
+    function przygotujUkładHomeWizard() {
+      if (!MOBILE_MQL.matches) return;
+      const chrome = document.getElementById('wizard-mobile-chrome');
+      if (chrome) {
+        chrome.hidden = false;
+        chrome.classList.add('is-active');
+      }
+      syncMobileTopChromeHeight();
+    }
+
+    function ustawStanPoczatkowyHomeWizard(kierunek) {
+      const viewHome = document.getElementById('view-home');
+      const viewKreator = document.getElementById('view-kreator');
+      const chrome = document.getElementById('wizard-mobile-chrome');
+      const doKreatora = kierunek === 'forward';
+      if (viewHome) {
+        viewHome.style.opacity = doKreatora ? '1' : '0';
+        viewHome.style.transform = '';
+      }
+      if (viewKreator) {
+        viewKreator.style.opacity = doKreatora ? '0' : '1';
+        viewKreator.style.transform = '';
+      }
+      if (chrome) {
+        chrome.style.opacity = doKreatora ? '0' : '1';
+        chrome.style.transform = '';
+      }
     }
 
     function odpalAnimacjeHomeDoKreatora(onDone) {
@@ -4528,8 +4557,12 @@
       const chrome = document.getElementById('wizard-mobile-chrome');
       const dur = HOME_WIZARD_ANIM_MS;
 
-      document.body.classList.remove('home-wizard-anim-back', 'home-wizard-anim-back-prep', 'home-wizard-anim-prep');
+      przygotujUkładHomeWizard();
+      document.body.classList.remove('home-wizard-anim-back', 'home-wizard-anim-back-prep');
       document.body.classList.add('home-wizard-anim-forward', 'home-wizard-anim-js');
+      ustawStanPoczatkowyHomeWizard('forward');
+      document.body.classList.remove('home-wizard-anim-prep');
+      if (viewKreator) void viewKreator.offsetHeight;
 
       clearTimeout(_homeWizardAnimTimer);
       let finished = false;
@@ -4542,23 +4575,21 @@
         wyczyscWarstwyHomeWizard();
       };
 
-      syncMobileTopChromeHeight();
-
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           Promise.all([
             animujWarstweHomeWizard(viewHome, [
-              { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-              { opacity: 0, transform: 'translate3d(0, -10px, 0) scale(0.986)' },
+              { opacity: 1 },
+              { opacity: 0 },
             ]),
             animujWarstweHomeWizard(viewKreator, [
-              { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
-              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+              { opacity: 0 },
+              { opacity: 1 },
             ]),
             animujWarstweHomeWizard(chrome, [
-              { opacity: 0, transform: 'translate3d(0, 10px, 0)' },
-              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
-            ], { delay: 48, duration: Math.max(280, dur - 48) }),
+              { opacity: 0 },
+              { opacity: 1 },
+            ]),
           ]).finally(zakoncz);
           _homeWizardAnimTimer = setTimeout(zakoncz, dur + 100);
         });
@@ -4582,8 +4613,11 @@
         viewHome.setAttribute('aria-hidden', 'false');
       }
 
+      przygotujUkładHomeWizard();
       document.body.classList.remove('home-wizard-anim-forward', 'home-wizard-anim-prep');
-      document.body.classList.add('home-wizard-anim-back-prep');
+      document.body.classList.add('home-wizard-anim-back', 'home-wizard-anim-js');
+      ustawStanPoczatkowyHomeWizard('back');
+      if (viewHome) void viewHome.offsetHeight;
 
       clearTimeout(_homeWizardAnimTimer);
       let finished = false;
@@ -4597,22 +4631,20 @@
       };
 
       requestAnimationFrame(() => {
-        document.body.classList.remove('home-wizard-anim-back-prep');
-        document.body.classList.add('home-wizard-anim-back', 'home-wizard-anim-js');
         requestAnimationFrame(() => {
           Promise.all([
             animujWarstweHomeWizard(viewHome, [
-              { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
-              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+              { opacity: 0 },
+              { opacity: 1 },
             ]),
             animujWarstweHomeWizard(viewKreator, [
-              { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-              { opacity: 0, transform: 'translate3d(0, -10px, 0) scale(0.986)' },
+              { opacity: 1 },
+              { opacity: 0 },
             ]),
             animujWarstweHomeWizard(chrome, [
-              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
-              { opacity: 0, transform: 'translate3d(0, -8px, 0)' },
-            ], { duration: Math.max(260, dur - 80) }),
+              { opacity: 1 },
+              { opacity: 0 },
+            ]),
           ]).finally(zakoncz);
           _homeWizardAnimTimer = setTimeout(zakoncz, dur + 100);
         });
@@ -4652,14 +4684,12 @@
       const wizardOpts = resume ? { poWznowieniu: true, dane: draftDane } : null;
       if (animujWejscie) {
         document.body.classList.add('home-wizard-anim-prep');
-        const homeTotal = document.getElementById('home-total');
-        if (homeTotal) homeTotal.setAttribute('hidden', '');
       }
       pokazWidokKreatora({ keepHomeVisible: animujWejscie });
       odswiezSzkicUI();
       if (animujWejscie) {
         inicjujWizard(startKrok, wizardOpts);
-        odswiezWizardChrome();
+        przygotujUkładHomeWizard();
         requestAnimationFrame(() => {
           odpalAnimacjeHomeDoKreatora(() => {
             const viewHome = document.getElementById('view-home');

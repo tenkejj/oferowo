@@ -8170,6 +8170,22 @@ body[data-active-view="view-kreator"] #view-home:not(.hidden):not([hidden]) {
   background: var(--m-bg);
 }
 
+body.home-wizard-anim-prep #view-kreator:not(.hidden):not([hidden]),
+body.home-wizard-anim-forward #view-kreator:not(.hidden):not([hidden]),
+body.home-wizard-anim-back #view-kreator:not(.hidden):not([hidden]),
+body.home-wizard-anim-back-prep #view-kreator:not(.hidden):not([hidden]) {
+  padding-top: var(--wizard-chrome-h, var(--mobile-top-chrome-h));
+  transition: none !important;
+}
+
+body.home-wizard-anim-prep #wizard-mobile-chrome,
+body.home-wizard-anim-forward #wizard-mobile-chrome,
+body.home-wizard-anim-back #wizard-mobile-chrome,
+body.home-wizard-anim-back-prep #wizard-mobile-chrome {
+  display: block !important;
+  visibility: visible !important;
+}
+
 body.home-wizard-anim-prep #view-home:not(.hidden):not([hidden]) {
   opacity: 1 !important;
   transition: none !important;
@@ -8240,9 +8256,13 @@ body.home-wizard-anim-back.home-wizard-anim-js #wizard-mobile-chrome.is-active {
 
 body.home-wizard-anim-prep .home-footer,
 body.home-wizard-anim-forward .home-footer,
-body.home-wizard-anim-back .home-footer {
+body.home-wizard-anim-back .home-footer,
+body.home-wizard-anim-prep .home-total,
+body.home-wizard-anim-forward .home-total,
+body.home-wizard-anim-back .home-total {
   opacity: 0 !important;
   visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 body.home-wizard-anim-back #view-kreator:not(.hidden):not([hidden]) {

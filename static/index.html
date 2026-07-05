@@ -3,7 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>SumIt</title>
+  <title>SumIt — wyceny PDF dla rzemieślników</title>
+  <meta name="description" content="Twórz wyceny i faktury PDF w 30 sekund. Bez konta — dane zostają w przeglądarce. Dla elektryków, hydraulików i ekip budowlanych.">
+  <link rel="canonical" href="https://sum-it.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pl_PL">
+  <meta property="og:site_name" content="SumIt">
+  <meta property="og:title" content="SumIt — wyceny PDF dla rzemieślników">
+  <meta property="og:description" content="Twórz wyceny i faktury PDF w 30 sekund. Bez konta — dane zostają w przeglądarce.">
+  <meta property="og:url" content="https://sum-it.app/">
+  <meta property="og:image" content="https://sum-it.app/static/icons/pwa-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SumIt — wyceny PDF dla rzemieślników">
+  <meta name="twitter:description" content="Twórz wyceny i faktury PDF w 30 sekund. Bez konta — dane zostają w przeglądarce.">
+  <meta name="twitter:image" content="https://sum-it.app/static/icons/pwa-512.png">
   <script>
     (function () {
       try {
@@ -828,6 +843,18 @@
           <ol class="settings-pwa-steps" id="settings-pwa-hint-android" hidden>
             <li><strong>⋮</strong> w Chrome → <strong>Zainstaluj aplikację</strong></li>
           </ol>
+        </section>
+        <section class="settings-section settings-section-privacy" id="settings-privacy-section">
+          <h4 class="settings-section-title">Prywatność</h4>
+          <p class="settings-hint">Krótko: co się dzieje z Twoimi danymi.</p>
+          <ul class="settings-privacy-list">
+            <li><strong>Bez konta.</strong> Wyceny, historia, firma i szkice są tylko w tej przeglądarce (<code>localStorage</code>). Nie prowadzimy bazy klientów.</li>
+            <li><strong>PDF.</strong> Dane formularza trafiają na serwer wyłącznie po to, by wygenerować plik — nie zapisujemy ich trwale.</li>
+            <li><strong>NIP.</strong> Wyszukiwanie firmy korzysta z publicznego API Ministerstwa Finansów (Biała Lista).</li>
+            <li><strong>Rozpoznawanie pozycji</strong> (tekst, głos, zdjęcie) — treść jest przetwarzana przez API Groq na czas obsługi żądania.</li>
+            <li><strong>Statystyki użytkowania</strong> — anonimowe zdarzenia bez cookies (np. wygenerowanie PDF), bez zapisu adresu IP.</li>
+            <li>Możesz wyczyścić dane lokalne w sekcji <strong>Dane lokalne</strong> powyżej.</li>
+          </ul>
         </section>
         <section class="settings-section settings-section-contact">
           <h4 class="settings-section-title">Kontakt</h4>

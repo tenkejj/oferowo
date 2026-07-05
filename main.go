@@ -45,6 +45,11 @@ func main() {
 		http.ServeFile(w, r, "static/manifest.json")
 	})))
 
+	mux.Handle("GET /robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		http.ServeFile(w, r, "static/robots.txt")
+	}))
+
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("static")))
 	mux.Handle("GET /static/", utf8Middleware(staticHandler))
 

@@ -22,6 +22,62 @@
       && typeof navigator.canShare === 'function'
       && typeof navigator.share === 'function';
 
+    function isLikelyIOS() {
+      const ua = navigator.userAgent || '';
+      return /iphone|ipad|ipod/i.test(ua)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    async function zapiszPdfZBlobsu(blob, nazwaPliku) {
+      const filename = String(nazwaPliku || 'wycena.pdf').replace(/[\\/:*?"<>|]+/g, '_');
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      if (typeof window.showSaveFilePicker === 'function') {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return { ok: true, method: 'picker' };
+        } catch (err) {
+          if (err && err.name === 'AbortError') return { ok: false, cancelled: true };
+        }
+      }
+
+      if (MOBILE_MQL.matches && isLikelyIOS() && shareSupported && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          return { ok: true, method: 'share' };
+        } catch (err) {
+          if (err && err.name === 'AbortError') return { ok: false, cancelled: true };
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.rel = 'noopener noreferrer';
+      if (MOBILE_MQL.matches && isLikelyIOS()) {
+        a.target = '_blank';
+      } else {
+        a.download = filename;
+      }
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), MOBILE_MQL.matches ? 120000 : 10000);
+
+      if (MOBILE_MQL.matches && isLikelyIOS()) {
+        pokazToast('Otworzyłem PDF — użyj Udostępnij → Zapisz w Plikach.', 'info');
+        return { ok: true, method: 'open' };
+      }
+
+      return { ok: true, method: 'download' };
+    }
+
     const STORAGE_KEY_SOURCE = 'sumit_source';
 
     function zachowajPozycjeScroll(fn) {
@@ -1842,17 +1898,22 @@
     function initGenOverlay() {
       const btnPobierz = document.getElementById('btn-gen-pobierz');
       if (btnPobierz) {
-        btnPobierz.addEventListener('click', () => {
+        btnPobierz.addEventListener('click', async () => {
           if (!_genAktualnyBlob) return;
-          const url = URL.createObjectURL(_genAktualnyBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = _genAktualnaNazwa || 'wycena.pdf';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 10000);
-          zamknijGenOverlay();
+          btnPobierz.disabled = true;
+          try {
+            const wynik = await zapiszPdfZBlobsu(_genAktualnyBlob, _genAktualnaNazwa || 'wycena.pdf');
+            if (wynik.ok && !wynik.cancelled) {
+              if (wynik.method === 'download' || wynik.method === 'picker') {
+                pokazToast('PDF pobrany.', 'success');
+              }
+              zamknijGenOverlay();
+            }
+          } catch (err) {
+            pokazToast('Nie udało się zapisać PDF: ' + (err && err.message ? err.message : 'błąd'), 'error');
+          } finally {
+            btnPobierz.disabled = false;
+          }
         });
       }
 
@@ -2122,20 +2183,24 @@
       }
     });
 
-    btnPobierzPdf.addEventListener('click', () => {
-      if (!aktualnyPodgladUrl) return;
-      const a = document.createElement('a');
-      a.href = aktualnyPodgladUrl;
-      a.download = aktualnaNazwaPliku;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      if (aktualnyPayload) {
-        dodajDoHistorii(aktualnyPayload, aktualneKoszty);
-        inkrementujNumeracje();
-        renderStatystyki();
-        aktualnyPayload = null;
-        aktualneKoszty = null;
+    btnPobierzPdf.addEventListener('click', async () => {
+      if (!aktualnyBlobPdf && !aktualnyPodgladUrl) return;
+      btnPobierzPdf.disabled = true;
+      try {
+        const blob = aktualnyBlobPdf || await (await fetch(aktualnyPodgladUrl)).blob();
+        const wynik = await zapiszPdfZBlobsu(blob, aktualnaNazwaPliku || 'wycena.pdf');
+        if (!wynik.ok || wynik.cancelled) return;
+        if (aktualnyPayload) {
+          dodajDoHistorii(aktualnyPayload, aktualneKoszty);
+          inkrementujNumeracje();
+          renderStatystyki();
+          aktualnyPayload = null;
+          aktualneKoszty = null;
+        }
+      } catch (err) {
+        pokazKomunikat('Nie udało się pobrać PDF: ' + err.message, 'error');
+      } finally {
+        btnPobierzPdf.disabled = false;
       }
     });
 
@@ -8765,15 +8830,11 @@
           throw new Error(tekst || `Błąd ${res.status}`);
         }
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
         const klient = String(wpis.payload.klient || '').replace(/[^a-z0-9-_]+/gi, '_') || 'dokument';
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `wycena-${klient}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 0);
+        const wynik = await zapiszPdfZBlobsu(blob, `wycena-${klient}.pdf`);
+        if (wynik.ok && !wynik.cancelled && (wynik.method === 'download' || wynik.method === 'picker')) {
+          pokazToast('PDF pobrany.', 'success');
+        }
       } catch (err) {
         window.alert('Nie udało się pobrać PDF: ' + err.message);
       } finally {
@@ -9194,15 +9255,8 @@
           });
           if (!res.ok) throw new Error((await res.text()) || 'Błąd ' + res.status);
           const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
           const klientName = String(dane.klient || '').split('\n')[0].replace(/[^a-z0-9-_]+/gi, '_') || 'wycena';
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'wycena-' + klientName + '.pdf';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          await zapiszPdfZBlobsu(blob, 'wycena-' + klientName + '.pdf');
         } catch (err) {
           alert('Nie udało się pobrać PDF: ' + err.message);
         } finally {

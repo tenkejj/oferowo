@@ -1920,26 +1920,40 @@
       const btnWyslij = document.getElementById('btn-gen-wyslij');
       if (btnWyslij) {
         btnWyslij.addEventListener('click', async () => {
-          if (!_genAktualnyBlob) return;
-          if (shareSupported) {
-            try {
-              const file = new File([_genAktualnyBlob], _genAktualnaNazwa || 'wycena.pdf', { type: 'application/pdf' });
-              if (navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: 'Wycena SumIt' });
+          if (!_genAktualnyPayload) return;
+          btnWyslij.disabled = true;
+          try {
+            const link = await udostepnijLinkWyceny(_genAktualnyPayload, { preferShare: MOBILE_MQL.matches });
+            if (link.ok) {
+              zamknijGenOverlay();
+              return;
+            }
+            if (link.cancelled) return;
+            if (link.tooLong && _genAktualnyBlob) {
+              const file = new File(
+                [_genAktualnyBlob],
+                _genAktualnaNazwa || 'wycena.pdf',
+                { type: 'application/pdf' },
+              );
+              if (shareSupported && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                  files: [file],
+                  title: 'Wycena SumIt',
+                  text: 'Wycena w załączniku (link był za długi).',
+                });
                 zamknijGenOverlay();
                 return;
               }
-            } catch (err) {
-              if (err && err.name === 'AbortError') return;
+              pokazToast('Wycena za duża na link — pobierz PDF i wyślij ręcznie.', 'error');
+              return;
             }
+            pokazToast('Nie udało się udostępnić linku. Pobierz PDF i wyślij ręcznie.', 'info');
+          } catch (err) {
+            if (err && err.name === 'AbortError') return;
+            pokazToast('Nie udało się wysłać wyceny: ' + (err && err.message ? err.message : 'błąd'), 'error');
+          } finally {
+            btnWyslij.disabled = false;
           }
-          // Fallback: copy link
-          if (_genAktualnyPayload) {
-            skopiujLinkWyceny();
-          } else {
-            pokazToast('Pobierz PDF i wyślij ręcznie.', 'info');
-          }
-          zamknijGenOverlay();
         });
       }
 
@@ -9529,6 +9543,82 @@
       }
     }
 
+    async function przygotujURLWyceny(payload) {
+      const str = await kodujWycenaDoURL(payload);
+      if (!str) throw new Error('Błąd kodowania');
+
+      const token = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+      if (token) {
+        const lista = wczytajHistorie();
+        const numerAkt = String(payload.numer_oferty || '').trim();
+        const klientAkt = String(payload.klient || '').trim();
+        const idx = lista.findIndex((w) =>
+          String(w.numerOferty || '').trim() === numerAkt
+          && String(w.klient || '').trim() === klientAkt,
+        );
+        if (idx !== -1 && !lista[idx].token) {
+          lista[idx].token = token;
+          zapiszHistorie(lista);
+        } else if (idx === -1) {
+          window._pendingLinkToken = token;
+        }
+      }
+
+      const tokenParam = token ? '&t=' + token : '';
+      const url = location.origin + '/?w=' + str + tokenParam;
+      return { url, tooLong: url.length > URL_SHARE_MAX_LEN };
+    }
+
+    async function udostepnijLinkPrzezShare(url) {
+      if (!shareSupported) return false;
+      const warianty = [
+        { url },
+        { title: 'Wycena SumIt', url },
+        { title: 'Wycena SumIt', text: 'Zobacz wycenę:', url },
+      ];
+      for (let i = 0; i < warianty.length; i++) {
+        const dane = warianty[i];
+        try {
+          if (!navigator.canShare(dane)) continue;
+          await navigator.share(dane);
+          return true;
+        } catch (err) {
+          if (err && err.name === 'AbortError') throw err;
+        }
+      }
+      return false;
+    }
+
+    async function udostepnijLinkWyceny(payload, opts) {
+      const preferShare = !!(opts && opts.preferShare);
+      const { url, tooLong } = await przygotujURLWyceny(payload);
+      if (tooLong) return { ok: false, tooLong: true };
+
+      if (preferShare) {
+        try {
+          if (await udostepnijLinkPrzezShare(url)) {
+            trackEvent('link_copied');
+            pokazToast('Wyślij link klientowi — otworzy wycenę w przeglądarce.', 'success');
+            return { ok: true, method: 'share' };
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return { ok: false, cancelled: true };
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        trackEvent('link_copied');
+        pokazToast('Link skopiowany! Wyślij go klientowi — otworzy wycenę w przeglądarce.', 'success');
+        return { ok: true, method: 'clipboard' };
+      } catch (_) {
+        window.prompt('Skopiuj link do wyceny:', url);
+        trackEvent('link_copied');
+        pokazToast('Skopiuj link i wyślij klientowi.', 'info');
+        return { ok: true, method: 'prompt' };
+      }
+    }
+
     async function skopiujLinkWyceny() {
       const { gotowy, payload } = budujPayloadZFormularza();
       if (!gotowy) {
@@ -9539,32 +9629,8 @@
       const oryg = btn ? btn.textContent : '';
       if (btn) { btn.disabled = true; btn.textContent = 'Generowanie…'; }
       try {
-        const str = await kodujWycenaDoURL(payload);
-        if (!str) throw new Error('Błąd kodowania');
-
-        // Generuj token akceptacji i przypisz do ostatniego wpisu historii
-        const token = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
-        if (token) {
-          const lista = wczytajHistorie();
-          // Znajdź wpis pasujący do aktualnej wyceny (ten sam numer i klient)
-          const numerAkt = String(payload.numer_oferty || '').trim();
-          const klientAkt = String(payload.klient || '').trim();
-          const idx = lista.findIndex(w =>
-            String(w.numerOferty || '').trim() === numerAkt &&
-            String(w.klient || '').trim() === klientAkt
-          );
-          if (idx !== -1 && !lista[idx].token) {
-            lista[idx].token = token;
-            zapiszHistorie(lista);
-          } else if (idx === -1) {
-            // Wycena jeszcze nie w historii — token zostanie dołączony przy najbliższym zapisie
-            window._pendingLinkToken = token;
-          }
-        }
-
-        const tokenParam = token ? '&t=' + token : '';
-        const url = location.origin + '/?w=' + str + tokenParam;
-        if (url.length > URL_SHARE_MAX_LEN) {
+        const { url, tooLong } = await przygotujURLWyceny(payload);
+        if (tooLong) {
           pokazKomunikat('Wycena jest za duża na link (zbyt wiele pozycji lub długich nazw). Wyślij klientowi PDF.', 'error');
           return;
         }

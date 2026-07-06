@@ -7012,6 +7012,33 @@
       odswiezWizardStep2Transkrypt();
     }
 
+    function scalTranskryptMowy(baseText, incomingText) {
+      const base = String(baseText || '');
+      const incoming = String(incomingText || '');
+      if (!base.trim()) return incoming;
+      if (!incoming.trim()) return base;
+
+      const baseTrimmed = base.trimEnd();
+      const incomingTrimmed = incoming.trimStart();
+      const baseLower = baseTrimmed.toLowerCase();
+      const incomingLower = incomingTrimmed.toLowerCase();
+      const maxOverlap = Math.min(baseLower.length, incomingLower.length);
+      let overlap = 0;
+
+      for (let len = maxOverlap; len > 0; len--) {
+        if (baseLower.slice(-len) === incomingLower.slice(0, len)) {
+          overlap = len;
+          break;
+        }
+      }
+
+      const needsSpace = overlap === 0
+        && baseTrimmed
+        && incomingTrimmed
+        && !/\s$/.test(baseTrimmed);
+      return baseTrimmed + (needsSpace ? ' ' : '') + incomingTrimmed.slice(overlap);
+    }
+
     function initAiSpeech() {
       const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognitionCtor || !btnAiMic) {
@@ -7030,23 +7057,24 @@
 
       speechRecognition.addEventListener('result', (e) => {
         if (!aiNotatka) return;
-        let finalTranscript = '';
+        let sessionFinalTranscript = '';
         let interimTranscript = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
+        for (let i = 0; i < e.results.length; i++) {
           const chunk = e.results[i][0].transcript;
-          if (e.results[i].isFinal) finalTranscript += chunk;
+          if (e.results[i].isFinal) sessionFinalTranscript += chunk;
           else interimTranscript += chunk;
         }
-        if (finalTranscript) {
-          speechBaseText += finalTranscript;
-        }
-        aiNotatka.value = speechBaseText + interimTranscript;
+        aiNotatka.value = scalTranskryptMowy(
+          speechBaseText,
+          sessionFinalTranscript + interimTranscript
+        );
         odswiezWizardStep2Transkrypt();
       });
 
       speechRecognition.addEventListener('end', () => {
         if (speechRecording) {
           try {
+            if (aiNotatka) speechBaseText = aiNotatka.value;
             speechRecognition.start();
           } catch (e) {
             zatrzymajDyktowanie();
